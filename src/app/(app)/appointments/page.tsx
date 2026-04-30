@@ -1,3 +1,5 @@
+"use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
 import { AppointmentCard } from "@/src/components/appointments/appointment-card";
@@ -16,21 +18,32 @@ function EmptyState() {
 }
 
 export default function AppointmentsPage() {
-  const appointments: Appointment[] = [
-    {
-      id: 1,
-      date: "2026-04-30",
-      slot: "morning",
-      status: "SCHEDULED",
-      notes: "Client prefers early visit",
-    },
-    {
-      id: 2,
-      date: "2026-05-01",
-      slot: "afternoon",
-      status: "CONFIRMED",
-    },
-  ];
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/appointments", {
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch appointments");
+        }
+
+        const result = await res.json();
+
+        setAppointments(result.data); // ✅ important
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl">
