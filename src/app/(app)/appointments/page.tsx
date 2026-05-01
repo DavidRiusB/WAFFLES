@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
 import { AppointmentCard } from "@/src/components/appointments/appointment-card";
 import type { Appointment } from "@/src/types/appointment";
+import { FilterPanel } from "@/src/components/appointments/filter-panel";
 
 function EmptyState() {
   return (
@@ -17,14 +18,35 @@ function EmptyState() {
   );
 }
 
+function buildQuery(params: Record<string, any>) {
+  const query = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) {
+      query.append(key, value);
+    }
+  });
+
+  return query.toString();
+}
+
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const [filters, setFilters] = useState<{
+    status?: string;
+    slot?: string;
+    date?: string;
+  }>({});
 
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const res = await fetch("http://localhost:3000/appointments", {
+        const query = buildQuery(filters);
+
+        const res = await fetch(`http://localhost:3000/appointments?${query}`, {
           credentials: "include",
         });
 
@@ -33,17 +55,16 @@ export default function AppointmentsPage() {
         }
 
         const result = await res.json();
-
-        setAppointments(result.data); // ✅ important
+        setAppointments(result.data);
       } catch (error) {
         console.error(error);
       } finally {
         setLoading(false);
       }
     };
-
+    console.log("filters changed:", filters);
     fetchAppointments();
-  }, []);
+  }, [filters]); // 👈 IMPORTANT
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl">
@@ -51,9 +72,20 @@ export default function AppointmentsPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Appointments</h1>
 
-        <Link href="/appointments/new">
-          <Button>New Appointment</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Filter button */}
+          <button
+            onClick={() => setShowFilters(true)}
+            className="border px-3 py-2 rounded hover:bg-gray-100"
+          >
+            ⚙️ Filters
+          </button>
+
+          {/* New appointment */}
+          <Link href="/appointments/new">
+            <Button>New Appointment</Button>
+          </Link>
+        </div>
       </div>
 
       {/* Content */}
@@ -66,6 +98,13 @@ export default function AppointmentsPage() {
           ))}
         </div>
       )}
+      <FilterPanel
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        onApply={(newFilters) => {
+          setFilters(newFilters);
+        }}
+      />
     </div>
   );
 }
