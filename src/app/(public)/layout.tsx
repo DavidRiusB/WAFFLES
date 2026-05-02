@@ -3,5 +3,9 @@ export default function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <main>{children}</main>;
+  return (
+    <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+      {children}
+    </main>
+  );
 }

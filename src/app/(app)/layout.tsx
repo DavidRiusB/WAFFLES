@@ -1,4 +1,5 @@
 import Sidebar from "@/src/components/layout/sidebar";
+import { PageContainer } from "@/src/components/ui/PageContainer";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -6,7 +7,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
 
       <main className="flex-1">
-        <div className="p-6 max-w-7xl mx-auto">{children}</div>
+        <PageContainer>{children}</PageContainer>
       </main>
     </div>
   );

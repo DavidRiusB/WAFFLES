@@ -4,6 +4,8 @@ import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Select } from "@/src/components/ui/select-component";
+import { Textarea } from "@/src/components/ui/textarea";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -56,7 +58,7 @@ export default function NewAppointmentPage() {
       {/* Slot */}
       <div>
         <label className="text-sm text-gray-500">Time Slot</label>
-        <select
+        <Select
           value={slot}
           onChange={(e) => setSlot(e.target.value)}
           className="border p-2 w-full mt-1 rounded"
@@ -65,13 +67,13 @@ export default function NewAppointmentPage() {
           <option value="MORNING">Morning ☀️</option>
           <option value="MIDDAY">Midday 🌤️</option>
           <option value="AFTERNOON">Afternoon 🌇</option>
-        </select>
+        </Select>
       </div>
 
       {/* Notes */}
       <div>
         <label className="text-sm text-gray-500">Notes (optional)</label>
-        <textarea
+        <Textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           className="border p-2 w-full mt-1 rounded"

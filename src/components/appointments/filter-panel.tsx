@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Select } from "../ui/select-component";
 
 type Props = {
   isOpen: boolean;
@@ -33,7 +34,7 @@ export function FilterPanel({ isOpen, onClose, onApply }: Props) {
         {/* Status */}
         <div>
           <label className="text-sm text-gray-500">Status</label>
-          <select
+          <Select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             className="border p-2 w-full mt-1"
@@ -43,13 +44,13 @@ export function FilterPanel({ isOpen, onClose, onApply }: Props) {
             <option value="CONFIRMED">Confirmed</option>
             <option value="COMPLETED">Completed</option>
             <option value="CANCELLED">Cancelled</option>
-          </select>
+          </Select>
         </div>
 
         {/* Slot */}
         <div>
           <label className="text-sm text-gray-500">Slot</label>
-          <select
+          <Select
             value={slot}
             onChange={(e) => setSlot(e.target.value)}
             className="border p-2 w-full mt-1"
@@ -58,7 +59,7 @@ export function FilterPanel({ isOpen, onClose, onApply }: Props) {
             <option value="MORNING">Morning</option>
             <option value="MIDDAY">Afternoon</option>
             <option value="AFTERNOON">Evening</option>
-          </select>
+          </Select>
         </div>
 
         {/* Date */}

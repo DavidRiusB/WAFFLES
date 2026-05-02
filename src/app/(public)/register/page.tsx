@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { useUser } from "@/src/context/user-context";
+import { FormField } from "@/src/components/ui/form-field";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -58,60 +59,64 @@ export default function RegisterPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-md">
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-md bg-white p-8 rounded-xl shadow-sm flex flex-col gap-5"
+    >
       <h1 className="text-2xl font-bold">Create Account</h1>
 
-      {/* Username */}
-      <Input
-        placeholder="Username"
-        value={form.userName}
-        onChange={(e) => handleChange("userName", e.target.value)}
-      />
+      <FormField label="Username">
+        <Input
+          className="border p-2 rounded w-full"
+          value={form.userName}
+          onChange={(e) => handleChange("userName", e.target.value)}
+        />
+      </FormField>
 
-      {/* First Name */}
-      <Input
-        placeholder="First Name"
-        value={form.firstName}
-        onChange={(e) => handleChange("firstName", e.target.value)}
-      />
+      <FormField label="First Name">
+        <Input
+          value={form.firstName}
+          onChange={(e) => handleChange("firstName", e.target.value)}
+        />
+      </FormField>
 
-      {/* Last Name */}
-      <Input
-        placeholder="Last Name"
-        value={form.lastName}
-        onChange={(e) => handleChange("lastName", e.target.value)}
-      />
+      <FormField label="Last Name">
+        <Input
+          value={form.lastName}
+          onChange={(e) => handleChange("lastName", e.target.value)}
+        />
+      </FormField>
 
-      {/* Email */}
-      <Input
-        type="email"
-        placeholder="Email"
-        value={form.email}
-        onChange={(e) => handleChange("email", e.target.value)}
-      />
+      <FormField label="Email">
+        <Input
+          type="email"
+          value={form.email}
+          onChange={(e) => handleChange("email", e.target.value)}
+        />
+      </FormField>
 
-      {/* Phone */}
-      <Input
-        placeholder="Phone"
-        value={form.telephone}
-        onChange={(e) => handleChange("telephone", e.target.value)}
-      />
+      <FormField label="Phone">
+        <Input
+          value={form.telephone}
+          onChange={(e) => handleChange("telephone", e.target.value)}
+        />
+      </FormField>
 
-      {/* Password */}
-      <Input
-        type="password"
-        placeholder="Password"
-        value={form.password}
-        onChange={(e) => handleChange("password", e.target.value)}
-      />
+      <FormField label="Password">
+        <Input
+          type="password"
+          value={form.password}
+          onChange={(e) => handleChange("password", e.target.value)}
+        />
+      </FormField>
 
-      {/* Confirm Password */}
-      <Input
-        type="password"
-        placeholder="Confirm Password"
-        value={form.confirmPassword}
-        onChange={(e) => handleChange("confirmPassword", e.target.value)}
-      />
+      <FormField label="Confirm Password">
+        <Input
+          type="password"
+          value={form.confirmPassword}
+          onChange={(e) => handleChange("confirmPassword", e.target.value)}
+        />
+      </FormField>
 
       <Button type="submit">Register</Button>
     </form>
