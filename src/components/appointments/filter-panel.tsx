@@ -55,9 +55,9 @@ export function FilterPanel({ isOpen, onClose, onApply }: Props) {
             className="border p-2 w-full mt-1"
           >
             <option value="">All</option>
-            <option value="morning">Morning</option>
-            <option value="afternoon">Afternoon</option>
-            <option value="evening">Evening</option>
+            <option value="MORNING">Morning</option>
+            <option value="MIDDAY">Afternoon</option>
+            <option value="AFTERNOON">Evening</option>
           </select>
         </div>
 
