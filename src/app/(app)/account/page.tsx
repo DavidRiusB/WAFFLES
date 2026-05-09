@@ -43,15 +43,36 @@ const emptyAddressForm = {
   notes: "",
 };
 
+// Convert an Address from the API into the string-based form shape
+function addressToForm(a: Address) {
+  return {
+    number: String(a.number),
+    cardinalDirection: a.cardinalDirection ?? "",
+    streetName: a.streetName,
+    suffix: a.suffix,
+    city: a.city,
+    state: a.state,
+    zipCode: a.zipCode,
+    notes: a.notes ?? "",
+  };
+}
+
 export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Address form state
-  const [form, setForm] = useState(emptyAddressForm);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  // Phone edit state
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phoneInput, setPhoneInput] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+
+  // Address form state (used for both add and edit)
+  const [editingAddress, setEditingAddress] = useState(false);
+  const [addressForm, setAddressForm] = useState(emptyAddressForm);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [addressError, setAddressError] = useState<string | null>(null);
 
   const fetchUser = async () => {
     try {
@@ -76,30 +97,93 @@ export default function AccountPage() {
     fetchUser();
   }, []);
 
-  const handleChange = (key: string, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+  // ----- Phone handlers -----
+  const startEditingPhone = () => {
+    setPhoneInput(user?.telephone ?? "");
+    setPhoneError(null);
+    setEditingPhone(true);
   };
 
-  const handleAddAddress = async (e: React.FormEvent) => {
+  const cancelEditingPhone = () => {
+    setEditingPhone(false);
+    setPhoneError(null);
+  };
+
+  const savePhone = async () => {
+    setPhoneError(null);
+    setSavingPhone(true);
+    try {
+      const res = await fetch(`${API_BASE}/users/me`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ telephone: phoneInput }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Failed to update phone");
+      }
+      await fetchUser();
+      setEditingPhone(false);
+    } catch (err) {
+      setPhoneError(
+        err instanceof Error ? err.message : "Something went wrong",
+      );
+    } finally {
+      setSavingPhone(false);
+    }
+  };
+
+  // ----- Address handlers -----
+  const startAddingAddress = () => {
+    setAddressForm(emptyAddressForm);
+    setAddressError(null);
+    setEditingAddress(true);
+  };
+
+  const startEditingAddress = (a: Address) => {
+    setAddressForm(addressToForm(a));
+    setAddressError(null);
+    setEditingAddress(true);
+  };
+
+  const cancelEditingAddress = () => {
+    setEditingAddress(false);
+    setAddressError(null);
+  };
+
+  const handleAddressFieldChange = (key: string, value: string) => {
+    setAddressForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const saveAddress = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitError(null);
-    setSubmitting(true);
+    setAddressError(null);
+    setSavingAddress(true);
+
+    const primaryAddress = user?.addresses.find((a) => a.isPrimary) ?? null;
+    const isEdit = primaryAddress !== null;
+
+    const url = isEdit
+      ? `${API_BASE}/addresses/${primaryAddress.id}`
+      : `${API_BASE}/addresses`;
+    const method = isEdit ? "PATCH" : "POST";
 
     try {
-      const res = await fetch(`${API_BASE}/addresses`, {
-        method: "POST",
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          number: Number(form.number),
-          cardinalDirection: form.cardinalDirection || undefined,
-          streetName: form.streetName,
-          suffix: form.suffix,
-          city: form.city,
-          state: form.state,
-          zipCode: form.zipCode,
-          notes: form.notes || undefined,
-          isPrimary: true, // MVP: always primary, only one address
+          number: Number(addressForm.number),
+          cardinalDirection: addressForm.cardinalDirection || undefined,
+          streetName: addressForm.streetName,
+          suffix: addressForm.suffix,
+          city: addressForm.city,
+          state: addressForm.state,
+          zipCode: addressForm.zipCode,
+          notes: addressForm.notes || undefined,
+          isPrimary: true,
         }),
       });
 
@@ -108,15 +192,14 @@ export default function AccountPage() {
         throw new Error(data?.message || "Failed to save address");
       }
 
-      // Reset form, refetch user to show the new address
-      setForm(emptyAddressForm);
       await fetchUser();
+      setEditingAddress(false);
     } catch (err) {
-      setSubmitError(
+      setAddressError(
         err instanceof Error ? err.message : "Something went wrong",
       );
     } finally {
-      setSubmitting(false);
+      setSavingAddress(false);
     }
   };
 
@@ -133,7 +216,7 @@ export default function AccountPage() {
       {/* Personal info */}
       <section className="flex flex-col gap-2">
         <h2 className="text-sm text-gray-500">Personal info</h2>
-        <div className="border rounded p-4 flex flex-col gap-1">
+        <div className="border rounded p-4 flex flex-col gap-2">
           <p>
             <span className="text-gray-500">Name: </span>
             {user.firstName} {user.lastName}
@@ -142,10 +225,49 @@ export default function AccountPage() {
             <span className="text-gray-500">Email: </span>
             {user.email}
           </p>
-          <p>
-            <span className="text-gray-500">Phone: </span>
-            {user.telephone}
-          </p>
+
+          {/* Phone row */}
+          <div className="flex items-center gap-3">
+            <span className="text-gray-500">Phone:</span>
+
+            {editingPhone ? (
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="tel"
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  disabled={savingPhone}
+                  className="border rounded p-1"
+                />
+                <button
+                  onClick={savePhone}
+                  disabled={savingPhone}
+                  className="bg-black text-white rounded px-3 py-1 text-sm disabled:opacity-50"
+                >
+                  {savingPhone ? "Saving…" : "Save"}
+                </button>
+                <button
+                  onClick={cancelEditingPhone}
+                  disabled={savingPhone}
+                  className="border rounded px-3 py-1 text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span>{user.telephone}</span>
+                <button
+                  onClick={startEditingPhone}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  Edit
+                </button>
+              </div>
+            )}
+          </div>
+
+          {phoneError && <p className="text-red-600 text-sm">{phoneError}</p>}
         </div>
       </section>
 
@@ -153,40 +275,22 @@ export default function AccountPage() {
       <section className="flex flex-col gap-2">
         <h2 className="text-sm text-gray-500">Address</h2>
 
-        {primaryAddress ? (
-          <div className="border rounded p-4 flex flex-col gap-1">
-            <p>
-              {primaryAddress.number} {primaryAddress.cardinalDirection}{" "}
-              {primaryAddress.streetName} {primaryAddress.suffix}
-            </p>
-            <p>
-              {primaryAddress.city}, {primaryAddress.state}{" "}
-              {primaryAddress.zipCode}
-            </p>
-            {primaryAddress.notes && (
-              <p className="text-sm text-gray-500">
-                Notes: {primaryAddress.notes}
-              </p>
-            )}
-          </div>
-        ) : (
+        {editingAddress ? (
           <form
-            onSubmit={handleAddAddress}
+            onSubmit={saveAddress}
             className="border rounded p-4 flex flex-col gap-3"
           >
-            <p className="text-sm text-gray-500">
-              You don't have an address on file. Add one to start booking.
-            </p>
-
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1">
                 <span className="text-sm text-gray-500">Number</span>
                 <input
                   type="number"
-                  value={form.number}
-                  onChange={(e) => handleChange("number", e.target.value)}
+                  value={addressForm.number}
+                  onChange={(e) =>
+                    handleAddressFieldChange("number", e.target.value)
+                  }
                   required
-                  disabled={submitting}
+                  disabled={savingAddress}
                   className="border rounded p-2"
                 />
               </label>
@@ -196,11 +300,14 @@ export default function AccountPage() {
                   Direction (optional)
                 </span>
                 <select
-                  value={form.cardinalDirection}
+                  value={addressForm.cardinalDirection}
                   onChange={(e) =>
-                    handleChange("cardinalDirection", e.target.value)
+                    handleAddressFieldChange(
+                      "cardinalDirection",
+                      e.target.value,
+                    )
                   }
-                  disabled={submitting}
+                  disabled={savingAddress}
                   className="border rounded p-2"
                 >
                   <option value="">—</option>
@@ -216,10 +323,12 @@ export default function AccountPage() {
                 <span className="text-sm text-gray-500">Street name</span>
                 <input
                   type="text"
-                  value={form.streetName}
-                  onChange={(e) => handleChange("streetName", e.target.value)}
+                  value={addressForm.streetName}
+                  onChange={(e) =>
+                    handleAddressFieldChange("streetName", e.target.value)
+                  }
                   required
-                  disabled={submitting}
+                  disabled={savingAddress}
                   className="border rounded p-2"
                 />
               </label>
@@ -227,10 +336,12 @@ export default function AccountPage() {
               <label className="flex flex-col gap-1">
                 <span className="text-sm text-gray-500">Suffix</span>
                 <select
-                  value={form.suffix}
-                  onChange={(e) => handleChange("suffix", e.target.value)}
+                  value={addressForm.suffix}
+                  onChange={(e) =>
+                    handleAddressFieldChange("suffix", e.target.value)
+                  }
                   required
-                  disabled={submitting}
+                  disabled={savingAddress}
                   className="border rounded p-2"
                 >
                   <option value="">Select…</option>
@@ -246,10 +357,12 @@ export default function AccountPage() {
                 <span className="text-sm text-gray-500">City</span>
                 <input
                   type="text"
-                  value={form.city}
-                  onChange={(e) => handleChange("city", e.target.value)}
+                  value={addressForm.city}
+                  onChange={(e) =>
+                    handleAddressFieldChange("city", e.target.value)
+                  }
                   required
-                  disabled={submitting}
+                  disabled={savingAddress}
                   className="border rounded p-2"
                 />
               </label>
@@ -257,10 +370,12 @@ export default function AccountPage() {
               <label className="flex flex-col gap-1">
                 <span className="text-sm text-gray-500">State</span>
                 <select
-                  value={form.state}
-                  onChange={(e) => handleChange("state", e.target.value)}
+                  value={addressForm.state}
+                  onChange={(e) =>
+                    handleAddressFieldChange("state", e.target.value)
+                  }
                   required
-                  disabled={submitting}
+                  disabled={savingAddress}
                   className="border rounded p-2"
                 >
                   <option value="">Select…</option>
@@ -277,10 +392,12 @@ export default function AccountPage() {
                 <input
                   type="text"
                   inputMode="numeric"
-                  value={form.zipCode}
-                  onChange={(e) => handleChange("zipCode", e.target.value)}
+                  value={addressForm.zipCode}
+                  onChange={(e) =>
+                    handleAddressFieldChange("zipCode", e.target.value)
+                  }
                   required
-                  disabled={submitting}
+                  disabled={savingAddress}
                   className="border rounded p-2"
                 />
               </label>
@@ -288,27 +405,75 @@ export default function AccountPage() {
               <label className="flex flex-col gap-1 col-span-2">
                 <span className="text-sm text-gray-500">Notes (optional)</span>
                 <textarea
-                  value={form.notes}
-                  onChange={(e) => handleChange("notes", e.target.value)}
-                  disabled={submitting}
+                  value={addressForm.notes}
+                  onChange={(e) =>
+                    handleAddressFieldChange("notes", e.target.value)
+                  }
+                  disabled={savingAddress}
                   rows={2}
                   className="border rounded p-2"
                 />
               </label>
             </div>
 
-            {submitError && (
-              <p className="text-red-600 text-sm">{submitError}</p>
+            {addressError && (
+              <p className="text-red-600 text-sm">{addressError}</p>
             )}
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="bg-black text-white rounded p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? "Saving…" : "Save address"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={savingAddress}
+                className="bg-black text-white rounded p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingAddress ? "Saving…" : "Save address"}
+              </button>
+              <button
+                type="button"
+                onClick={cancelEditingAddress}
+                disabled={savingAddress}
+                className="border rounded p-2"
+              >
+                Cancel
+              </button>
+            </div>
           </form>
+        ) : primaryAddress ? (
+          <div className="border rounded p-4 flex flex-col gap-2">
+            <div>
+              <p>
+                {primaryAddress.number} {primaryAddress.cardinalDirection}{" "}
+                {primaryAddress.streetName} {primaryAddress.suffix}
+              </p>
+              <p>
+                {primaryAddress.city}, {primaryAddress.state}{" "}
+                {primaryAddress.zipCode}
+              </p>
+              {primaryAddress.notes && (
+                <p className="text-sm text-gray-500">
+                  Notes: {primaryAddress.notes}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => startEditingAddress(primaryAddress)}
+              className="text-sm text-blue-600 hover:underline self-start"
+            >
+              Edit
+            </button>
+          </div>
+        ) : (
+          <div className="border border-dashed rounded p-4 flex flex-col gap-2">
+            <p className="text-sm text-gray-500">
+              You don't have an address on file. Add one to start booking.
+            </p>
+            <button
+              onClick={startAddingAddress}
+              className="bg-black text-white rounded p-2 self-start"
+            >
+              Add address
+            </button>
+          </div>
         )}
       </section>
     </div>
