@@ -6,6 +6,8 @@ import { AppointmentCard } from "@/src/components/appointments/appointment-card"
 import type { Appointment } from "@/src/types/appointment";
 import { FilterPanel } from "@/src/components/appointments/filter-panel";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+
 function EmptyState() {
   return (
     <div className="border border-dashed border-gray-300 rounded-xl p-10 text-center">
@@ -33,6 +35,7 @@ function buildQuery(params: Record<string, any>) {
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   const [filters, setFilters] = useState<{
@@ -44,27 +47,27 @@ export default function AppointmentsPage() {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
+        setError(null);
         const query = buildQuery(filters);
-
-        const res = await fetch(`http://localhost:3000/appointments?${query}`, {
+        const res = await fetch(`${API_BASE}/appointments?${query}`, {
           credentials: "include",
         });
 
         if (!res.ok) {
-          throw new Error("Failed to fetch appointments");
+          const data = await res.json().catch(() => null);
+          throw new Error(data?.message || "Failed to fetch appointments");
         }
 
         const result = await res.json();
         setAppointments(result.data);
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong");
       } finally {
         setLoading(false);
       }
     };
-    console.log("filters changed:", filters);
     fetchAppointments();
-  }, [filters]); // 👈 IMPORTANT
+  }, [filters]);
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl">
@@ -89,7 +92,12 @@ export default function AppointmentsPage() {
       </div>
 
       {/* Content */}
-      {appointments.length === 0 ? (
+
+      {loading ? (
+        <div className="text-gray-500 p-6">Loading appointments…</div>
+      ) : error ? (
+        <div className="text-red-600 p-6">Error: {error}</div>
+      ) : appointments.length === 0 ? (
         <EmptyState />
       ) : (
         <div className="flex flex-col gap-4">
@@ -98,13 +106,6 @@ export default function AppointmentsPage() {
           ))}
         </div>
       )}
-      <FilterPanel
-        isOpen={showFilters}
-        onClose={() => setShowFilters(false)}
-        onApply={(newFilters) => {
-          setFilters(newFilters);
-        }}
-      />
     </div>
   );
 }

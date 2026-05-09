@@ -11,7 +11,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export default function RegisterPage() {
   const router = useRouter();
-
   const { login } = useUser();
 
   const [form, setForm] = useState({
@@ -24,37 +23,48 @@ export default function RegisterPage() {
     telephone: "",
   });
 
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const handleChange = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
+
+    // Client-side validation
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
+      // Don't send confirmPassword to the backend — it doesn't need it
+      const { confirmPassword, ...payload } = form;
+
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        console.error("Register error:", error);
-        throw new Error(error.message || "Register failed");
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Registration failed");
       }
 
       const data = await res.json();
       login(data);
-      console.log("REGISTER RESPONSE:", data);
-
       router.push("/dashboard");
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -67,9 +77,9 @@ export default function RegisterPage() {
 
       <FormField label="Username">
         <Input
-          className="border p-2 rounded w-full"
           value={form.userName}
           onChange={(e) => handleChange("userName", e.target.value)}
+          disabled={submitting}
         />
       </FormField>
 
@@ -77,6 +87,7 @@ export default function RegisterPage() {
         <Input
           value={form.firstName}
           onChange={(e) => handleChange("firstName", e.target.value)}
+          disabled={submitting}
         />
       </FormField>
 
@@ -84,6 +95,7 @@ export default function RegisterPage() {
         <Input
           value={form.lastName}
           onChange={(e) => handleChange("lastName", e.target.value)}
+          disabled={submitting}
         />
       </FormField>
 
@@ -92,6 +104,7 @@ export default function RegisterPage() {
           type="email"
           value={form.email}
           onChange={(e) => handleChange("email", e.target.value)}
+          disabled={submitting}
         />
       </FormField>
 
@@ -99,6 +112,7 @@ export default function RegisterPage() {
         <Input
           value={form.telephone}
           onChange={(e) => handleChange("telephone", e.target.value)}
+          disabled={submitting}
         />
       </FormField>
 
@@ -107,6 +121,7 @@ export default function RegisterPage() {
           type="password"
           value={form.password}
           onChange={(e) => handleChange("password", e.target.value)}
+          disabled={submitting}
         />
       </FormField>
 
@@ -115,10 +130,19 @@ export default function RegisterPage() {
           type="password"
           value={form.confirmPassword}
           onChange={(e) => handleChange("confirmPassword", e.target.value)}
+          disabled={submitting}
         />
       </FormField>
 
-      <Button type="submit">Register</Button>
+      {error && <p className="text-red-600 text-sm">{error}</p>}
+
+      <Button
+        type="submit"
+        disabled={submitting}
+        className="disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {submitting ? "Creating account…" : "Register"}
+      </Button>
     </form>
   );
 }

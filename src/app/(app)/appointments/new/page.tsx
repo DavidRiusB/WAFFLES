@@ -10,6 +10,16 @@ type AvailabilityDay = {
   slots: { slot: string; available: boolean }[];
 };
 
+function formatDay(isoDate: string): string {
+  const d = new Date(isoDate + "T00:00:00");
+  return d.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  // "Tue, May 12"
+}
+
 export default function NewAppointmentPage() {
   // Data states
   const [availability, setAvailability] = useState<AvailabilityDay[]>([]);
@@ -113,7 +123,7 @@ export default function NewAppointmentPage() {
                 selectedDate === day.date ? "bg-black text-white" : "bg-white"
               }`}
             >
-              {day.date}
+              {formatDay(day.date)}
             </button>
           ))}
         </div>
@@ -144,7 +154,7 @@ export default function NewAppointmentPage() {
         </section>
       )}
 
-      {/* Step 3: Notes + confirm (still console.log for now) */}
+      {/* Step 3: Notes + confirm */}
       {selectedSlot && (
         <section className="flex flex-col gap-2">
           <label className="text-sm text-gray-500">Notes (optional)</label>
