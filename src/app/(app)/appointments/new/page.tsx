@@ -1,10 +1,11 @@
 "use client";
+
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
-// Type matching the API response
 type AvailabilityDay = {
   date: string;
   slots: { slot: string; available: boolean }[];
@@ -17,27 +18,66 @@ function formatDay(isoDate: string): string {
     month: "short",
     day: "numeric",
   });
-  // "Tue, May 12"
 }
 
 export default function NewAppointmentPage() {
-  // Data states
+  // Availability
   const [availability, setAvailability] = useState<AvailabilityDay[]>([]);
+
+  // Address gate
+  const [hasAddress, setHasAddress] = useState(false);
+
+  // Shared load state for both fetches
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Selection states (same as before)
+  // Selection
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
 
+  // Submit
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const router = useRouter();
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        // Fetch in parallel
+        const [availRes, userRes] = await Promise.all([
+          fetch(`${API_BASE}/appointments/availability`, {
+            credentials: "include",
+          }),
+          fetch(`${API_BASE}/users/me`, { credentials: "include" }),
+        ]);
+
+        if (!availRes.ok) {
+          const data = await availRes.json().catch(() => null);
+          throw new Error(data?.message || "Failed to load availability");
+        }
+        if (!userRes.ok) {
+          const data = await userRes.json().catch(() => null);
+          throw new Error(data?.message || "Failed to load profile");
+        }
+
+        const availData = await availRes.json();
+        const userData = await userRes.json();
+
+        setAvailability(availData);
+        setHasAddress((userData.addresses?.length ?? 0) > 0);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
   const handleConfirm = async () => {
-    if (!selectedDate || !selectedSlot) return; // safety guard
+    if (!selectedDate || !selectedSlot) return;
 
     setSubmitting(true);
     setSubmitError(null);
@@ -55,7 +95,8 @@ export default function NewAppointmentPage() {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to create appointment");
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Failed to create appointment");
       }
 
       router.push("/appointments");
@@ -68,41 +109,31 @@ export default function NewAppointmentPage() {
     }
   };
 
-  // Fetch availability when the page loads
-  useEffect(() => {
-    const fetchAvailability = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/appointments/availability`, {
-          credentials: "include",
-        });
+  if (loading) return <div className="p-6">Loading…</div>;
+  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
 
-        if (!res.ok) {
-          throw new Error("Failed to load availability");
-        }
-
-        const data = await res.json();
-        setAvailability(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Something went wrong");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAvailability();
-  }, []);
+  // ⬇️ Address gate
+  if (!hasAddress) {
+    return (
+      <div className="flex flex-col gap-4 max-w-2xl p-6">
+        <h1 className="text-2xl font-bold">Book a visit</h1>
+        <div className="border border-dashed rounded p-6 flex flex-col gap-3">
+          <p>
+            You need to add an address before booking. The technician needs to
+            know where to go.
+          </p>
+          <Link
+            href="/account"
+            className="bg-black text-white rounded p-2 self-start"
+          >
+            Add address
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const dayData = availability.find((d) => d.date === selectedDate);
-
-  // Loading state
-  if (loading) {
-    return <div className="p-6">Loading availability…</div>;
-  }
-
-  // Error state
-  if (error) {
-    return <div className="p-6 text-red-600">Error: {error}</div>;
-  }
 
   return (
     <div className="flex flex-col gap-8 max-w-2xl p-6">
