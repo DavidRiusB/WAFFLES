@@ -1,17 +1,27 @@
-import AdminSidebar from "@/src/components/layout/admin-sidebar";
+"use client";
+
+import { useUser } from "@/src/context/user-context";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="flex min-h-screen bg-[#e8eddfff]">
-      <AdminSidebar />
+  const { user } = useUser();
+  const router = useRouter();
 
-      <main className="flex-1">
-        <div className="p-6 max-w-7xl mx-auto">{children}</div>
-      </main>
-    </div>
-  );
+  useEffect(() => {
+    if (user && user.role !== "admin") {
+      router.replace("/appointments");
+    }
+  }, [user, router]);
+
+  // While we don't know who the user is yet, or they're being redirected
+  if (!user || user.role !== "admin") {
+    return null;
+  }
+
+  return <>{children}</>;
 }
