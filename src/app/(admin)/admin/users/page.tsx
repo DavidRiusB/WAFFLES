@@ -80,7 +80,7 @@ export default function CustomersPage() {
             results.map((customer) => (
               <Link
                 key={customer.id}
-                href={`/admin/customers/${customer.id}`}
+                href={`/admin/users/${customer.id}`}
                 className="border rounded p-4 hover:bg-gray-50 flex flex-col"
               >
                 <span className="font-medium">
