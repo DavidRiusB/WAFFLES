@@ -21,7 +21,16 @@ type AdminAppointment = {
   user: AppointmentUser;
 };
 
-type Filter = "today" | "week" | "all";
+// Match your backend enums
+const STATUSES = ["SCHEDULED", "CONFIRMED", "COMPLETED", "CANCELLED"] as const;
+const SLOTS = ["MORNING", "AFTERNOON", "EVENING"] as const;
+
+type Filters = {
+  startDate: string;
+  endDate: string;
+  status: string; // "" = all
+  slot: string; // "" = all
+};
 
 function formatDay(isoDate: string): string {
   const d = new Date(isoDate + "T00:00:00");
@@ -29,39 +38,91 @@ function formatDay(isoDate: string): string {
     weekday: "long",
     month: "short",
     day: "numeric",
+    year: "numeric",
   });
 }
 
-function todayIso(): string {
-  const d = new Date();
+function toIso(d: Date): string {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
 
-function addDaysIso(days: number): string {
-  const d = new Date();
+function addDays(base: Date, days: number): Date {
+  const d = new Date(base);
   d.setDate(d.getDate() + days);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+  return d;
+}
+
+// Preset range generators
+function presetRange(preset: string): { startDate: string; endDate: string } {
+  const today = new Date();
+
+  switch (preset) {
+    case "next14": {
+      return { startDate: toIso(today), endDate: toIso(addDays(today, 14)) };
+    }
+    case "thisWeek": {
+      const day = today.getDay(); // 0 = Sun
+      const monday = addDays(today, day === 0 ? -6 : 1 - day);
+      const sunday = addDays(monday, 6);
+      return { startDate: toIso(monday), endDate: toIso(sunday) };
+    }
+    case "lastWeek": {
+      const day = today.getDay();
+      const thisMonday = addDays(today, day === 0 ? -6 : 1 - day);
+      const lastMonday = addDays(thisMonday, -7);
+      const lastSunday = addDays(lastMonday, 6);
+      return { startDate: toIso(lastMonday), endDate: toIso(lastSunday) };
+    }
+    case "thisMonth": {
+      const first = new Date(today.getFullYear(), today.getMonth(), 1);
+      const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      return { startDate: toIso(first), endDate: toIso(last) };
+    }
+    case "lastMonth": {
+      const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const last = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { startDate: toIso(first), endDate: toIso(last) };
+    }
+    default:
+      return { startDate: toIso(today), endDate: toIso(addDays(today, 14)) };
+  }
 }
 
 export default function AdminAppointmentsPage() {
+  const initial = presetRange("next14");
+
+  const [filters, setFilters] = useState<Filters>({
+    startDate: initial.startDate,
+    endDate: initial.endDate,
+    status: "",
+    slot: "",
+  });
+
   const [appointments, setAppointments] = useState<AdminAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Filter>("today");
 
   useEffect(() => {
     const fetchAppointments = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const startDate = todayIso();
-        const endDate = addDaysIso(14);
-        const url = `${API_BASE}/appointments?startDate=${startDate}&endDate=${endDate}&limit=100`;
-        const res = await fetch(url, { credentials: "include" });
+        const params = new URLSearchParams();
+        params.set("startDate", filters.startDate);
+        params.set("endDate", filters.endDate);
+        params.set("limit", "100");
+        if (filters.status) params.set("status", filters.status);
+        if (filters.slot) params.set("slot", filters.slot);
+
+        const res = await fetch(
+          `${API_BASE}/appointments?${params.toString()}`,
+          {
+            credentials: "include",
+          },
+        );
         if (!res.ok) {
           const data = await res.json().catch(() => null);
           throw new Error(data?.message || "Failed to load appointments");
@@ -75,69 +136,114 @@ export default function AdminAppointmentsPage() {
       }
     };
     fetchAppointments();
-  }, []);
+  }, [filters]);
 
-  // Compute filtered list
-  const today = todayIso();
-  const weekEnd = addDaysIso(7);
+  const applyPreset = (preset: string) => {
+    const range = presetRange(preset);
+    setFilters((prev) => ({
+      ...prev,
+      startDate: range.startDate,
+      endDate: range.endDate,
+    }));
+  };
 
-  const filtered = appointments.filter((a) => {
-    if (filter === "today") return a.date === today;
-    if (filter === "week") return a.date >= today && a.date <= weekEnd;
-    return true; // 'all'
-  });
+  const updateFilter = (key: keyof Filters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
   // Group by date
-  const grouped = filtered.reduce<Record<string, AdminAppointment[]>>(
+  const grouped = appointments.reduce<Record<string, AdminAppointment[]>>(
     (acc, appt) => {
-      if (!acc[appt.date]) acc[appt.date] = [];
-      acc[appt.date].push(appt);
+      (acc[appt.date] ??= []).push(appt);
       return acc;
     },
     {},
   );
-
   const sortedDates = Object.keys(grouped).sort();
-
-  // Counts for filter buttons (always based on full data, not filtered)
-  const counts = {
-    today: appointments.filter((a) => a.date === today).length,
-    week: appointments.filter((a) => a.date >= today && a.date <= weekEnd)
-      .length,
-    all: appointments.length,
-  };
-
-  if (loading) return <div className="p-6">Loading…</div>;
-  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl p-6">
       <h1 className="text-2xl font-bold">Appointments</h1>
 
-      {/* Filter buttons */}
-      <div className="flex gap-2">
-        {(["today", "week", "all"] as Filter[]).map((f) => (
+      {/* Preset buttons */}
+      <div className="flex gap-2 flex-wrap">
+        {[
+          { key: "next14", label: "Next 14 days" },
+          { key: "thisWeek", label: "This week" },
+          { key: "lastWeek", label: "Last week" },
+          { key: "thisMonth", label: "This month" },
+          { key: "lastMonth", label: "Last month" },
+        ].map((p) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded border text-sm ${
-              filter === f ? "bg-black text-white" : "bg-white hover:bg-gray-50"
-            }`}
+            key={p.key}
+            onClick={() => applyPreset(p.key)}
+            className="px-3 py-2 rounded border text-sm bg-white hover:bg-gray-50"
           >
-            {f === "today"
-              ? "Today"
-              : f === "week"
-                ? "This week"
-                : "All upcoming"}{" "}
-            ({counts[f]})
+            {p.label}
           </button>
         ))}
       </div>
 
-      {/* Grouped list */}
-      {sortedDates.length === 0 ? (
+      {/* Custom range + filters */}
+      <div className="flex gap-3 flex-wrap items-end border rounded p-4">
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-gray-500">From</span>
+          <input
+            type="date"
+            value={filters.startDate}
+            onChange={(e) => updateFilter("startDate", e.target.value)}
+            className="border rounded p-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-gray-500">To</span>
+          <input
+            type="date"
+            value={filters.endDate}
+            onChange={(e) => updateFilter("endDate", e.target.value)}
+            className="border rounded p-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-gray-500">Status</span>
+          <select
+            value={filters.status}
+            onChange={(e) => updateFilter("status", e.target.value)}
+            className="border rounded p-2"
+          >
+            <option value="">All</option>
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-gray-500">Slot</span>
+          <select
+            value={filters.slot}
+            onChange={(e) => updateFilter("slot", e.target.value)}
+            className="border rounded p-2"
+          >
+            <option value="">All</option>
+            {SLOTS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {/* Results */}
+      {loading ? (
+        <div className="text-gray-500 p-6">Loading…</div>
+      ) : error ? (
+        <div className="text-red-600 p-6">Error: {error}</div>
+      ) : sortedDates.length === 0 ? (
         <div className="border border-dashed rounded p-6 text-gray-500 text-sm">
-          No appointments in this view.
+          No appointments match these filters.
         </div>
       ) : (
         <div className="flex flex-col gap-6">
