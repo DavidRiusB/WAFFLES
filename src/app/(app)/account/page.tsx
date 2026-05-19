@@ -29,6 +29,7 @@ type User = {
   lastName: string;
   email: string;
   telephone: string;
+  verified: boolean;
   addresses: Address[];
 };
 
@@ -61,6 +62,20 @@ export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Email verification UI state
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
+  const [emailMsg, setEmailMsg] = useState<{
+    type: "ok" | "err";
+    text: string;
+  } | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState<{
+    type: "ok" | "err";
+    text: string;
+  } | null>(null);
 
   // Phone edit state
   const [editingPhone, setEditingPhone] = useState(false);
@@ -96,6 +111,64 @@ export default function AccountPage() {
   useEffect(() => {
     fetchUser();
   }, []);
+
+  // ----- Email handlers -----
+  const handleResend = async () => {
+    setResendMsg(null);
+    setResending(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/resend-verification`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Could not resend verification email");
+      }
+      setResendMsg({
+        type: "ok",
+        text: "Verification email sent — check your inbox.",
+      });
+    } catch (err) {
+      setResendMsg({
+        type: "err",
+        text: err instanceof Error ? err.message : "Something went wrong",
+      });
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const handleChangeEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailMsg(null);
+    setEmailSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/change-email`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: emailInput }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Could not change email");
+      }
+      setEmailMsg({
+        type: "ok",
+        text: "Email updated. We sent a verification link to the new address.",
+      });
+      setEditingEmail(false);
+      await fetchUser(); // refresh so the displayed email + status update
+    } catch (err) {
+      setEmailMsg({
+        type: "err",
+        text: err instanceof Error ? err.message : "Something went wrong",
+      });
+    } finally {
+      setEmailSubmitting(false);
+    }
+  };
 
   // ----- Phone handlers -----
   const startEditingPhone = () => {
@@ -221,10 +294,102 @@ export default function AccountPage() {
             <span className="text-gray-500">Name: </span>
             {user.firstName} {user.lastName}
           </p>
-          <p>
-            <span className="text-gray-500">Email: </span>
-            {user.email}
-          </p>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-gray-500">Email:</span>
+              <span>{user.email}</span>
+              {user.verified ? (
+                <span className="text-green-700 text-sm border border-green-600 rounded px-2 py-0.5">
+                  Verified
+                </span>
+              ) : (
+                <span className="text-amber-700 text-sm border border-amber-600 rounded px-2 py-0.5">
+                  Not verified
+                </span>
+              )}
+            </div>
+
+            {/* Unverified-only actions */}
+            {!user.verified && (
+              <div className="flex flex-col gap-2 border-l-2 border-amber-300 pl-3">
+                <p className="text-sm text-gray-500">
+                  Verify your email to enable booking. Wrong email? Fix it
+                  below.
+                </p>
+
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={handleResend}
+                    disabled={resending}
+                    className="border rounded px-3 py-1 text-sm hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    {resending ? "Sending…" : "Resend verification email"}
+                  </button>
+                  {!editingEmail && (
+                    <button
+                      onClick={() => {
+                        setEmailInput(user.email);
+                        setEmailMsg(null);
+                        setEditingEmail(true);
+                      }}
+                      className="border rounded px-3 py-1 text-sm hover:bg-gray-50"
+                    >
+                      Change email
+                    </button>
+                  )}
+                </div>
+
+                {resendMsg && (
+                  <p
+                    className={`text-sm ${resendMsg.type === "ok" ? "text-green-700" : "text-red-600"}`}
+                  >
+                    {resendMsg.text}
+                  </p>
+                )}
+
+                {editingEmail && (
+                  <form
+                    onSubmit={handleChangeEmail}
+                    className="flex flex-col gap-2 mt-1"
+                  >
+                    <input
+                      type="email"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      disabled={emailSubmitting}
+                      className="border rounded p-2"
+                      placeholder="new@email.com"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={emailSubmitting}
+                        className="bg-black text-white rounded px-3 py-1 text-sm disabled:opacity-50"
+                      >
+                        {emailSubmitting ? "Saving…" : "Save new email"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingEmail(false)}
+                        disabled={emailSubmitting}
+                        className="border rounded px-3 py-1 text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {emailMsg && (
+                  <p
+                    className={`text-sm ${emailMsg.type === "ok" ? "text-green-700" : "text-red-600"}`}
+                  >
+                    {emailMsg.text}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Phone row */}
           <div className="flex items-center gap-3">

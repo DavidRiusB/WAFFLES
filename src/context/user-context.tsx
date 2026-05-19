@@ -4,10 +4,12 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 type User = {
   id: number;
+  role: string;
   firstName: string;
   lastName: string;
   email: string;
-  role: "user" | "admin";
+  telephone: string;
+  verified: boolean;
 };
 
 type UserContextType = {
