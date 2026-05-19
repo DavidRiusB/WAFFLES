@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/src/components/ui/input";
@@ -143,6 +145,13 @@ export default function RegisterPage() {
       >
         {submitting ? "Creating account…" : "Register"}
       </Button>
+
+      <p className="text-sm text-center text-gray-500">
+        Already have an account?{" "}
+        <Link href="/login" className="text-blue-600 hover:underline">
+          Log in
+        </Link>
+      </p>
     </form>
   );
 }
