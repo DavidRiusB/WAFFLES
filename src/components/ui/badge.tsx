@@ -1,17 +1,39 @@
-type BadgeProps = {
-  children: React.ReactNode;
-  variant?: "default" | "success" | "warning" | "danger";
+import clsx from "clsx";
+import { HTMLAttributes, forwardRef } from "react";
+
+type Variant = "neutral" | "success" | "warning" | "danger" | "accent";
+
+type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
+  variant?: Variant;
 };
 
-export function Badge({ children, variant = "default" }: BadgeProps) {
-  const base = "px-2 py-1 text-xs font-medium rounded-full";
+export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
+  ({ variant = "neutral", className, children, ...rest }, ref) => {
+    return (
+      <span
+        ref={ref}
+        className={clsx(
+          // base — always
+          "inline-flex items-center rounded px-2 py-0.5 text-sm font-bold border",
 
-  const styles = {
-    default: "bg-gray-100 text-gray-700",
-    success: "bg-green-100 text-green-700",
-    warning: "bg-yellow-100 text-yellow-700",
-    danger: "bg-red-100 text-red-700",
-  };
+          // variants — text uses -text token (darkened for legibility),
+          // border uses the base semantic color
+          variant === "neutral" && "text-muted border-border bg-surface",
+          variant === "success" &&
+            "text-success-text border-success bg-success/10",
+          variant === "warning" &&
+            "text-warning-text border-warning bg-warning/10",
+          variant === "danger" && "text-danger-text border-danger bg-danger/10",
+          variant === "accent" && "text-on-primary border-accent bg-accent/20",
 
-  return <span className={`${base} ${styles[variant]}`}>{children}</span>;
-}
+          className,
+        )}
+        {...rest}
+      >
+        {children}
+      </span>
+    );
+  },
+);
+
+Badge.displayName = "Badge";
