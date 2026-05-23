@@ -8,21 +8,21 @@ export function Footer() {
   const isSignedIn = !!user;
 
   return (
-    <footer className="bg-black text-gray-400">
+    <footer className="bg-secondary text-on-secondary/60">
       <div className="mx-auto max-w-6xl px-6 py-10 flex flex-col sm:flex-row gap-8 justify-between items-start text-sm">
         <div>
           <Link
             href="/"
             className="text-white font-semibold tracking-tight hover:opacity-90"
           >
-            Egalisys<span className="text-yellow-400">Tech</span> LLC
+            Egalisys<span className="text-accent">Tech</span> LLC
           </Link>
           <div className="mt-1">Tooele, Utah</div>
           <div className="mt-1">By appointment</div>
         </div>
 
         <div className="flex flex-col gap-1">
-          <div className="text-white font-semibold mb-1">Contact</div>
+          <div className="text-on-secondary transition-colors">Contact</div>
           <a
             href="mailto:support@egalisystech.com"
             className="hover:text-white"
