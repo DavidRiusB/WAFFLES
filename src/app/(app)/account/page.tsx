@@ -6,6 +6,11 @@ import {
   CardinalDirection,
   State,
 } from "@/src/lib/address-enums";
+import { Button } from "@/src/components/ui/button";
+import { Card } from "@/src/components/ui/card";
+import { Alert } from "@/src/components/ui/alert";
+import { Input } from "@/src/components/ui/input";
+import { Badge } from "@/src/components/ui/badge";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -288,63 +293,62 @@ export default function AccountPage() {
 
       {/* Personal info */}
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm text-gray-500">Personal info</h2>
-        <div className="border rounded p-4 flex flex-col gap-2">
+        <h2 className="text-sm text-muted">Personal info</h2>
+
+        <Card className="flex flex-col gap-2">
           <p>
-            <span className="text-gray-500">Name: </span>
+            <span className="text-muted">Name: </span>
             {user.firstName} {user.lastName}
           </p>
+
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-gray-500">Email:</span>
+              <span className="text-muted">Email:</span>
               <span>{user.email}</span>
               {user.verified ? (
-                <span className="text-green-700 text-sm border border-green-600 rounded px-2 py-0.5">
-                  Verified
-                </span>
+                <Badge variant="success">Verified</Badge>
               ) : (
-                <span className="text-amber-700 text-sm border border-amber-600 rounded px-2 py-0.5">
-                  Not verified
-                </span>
+                <Badge variant="warning">Not verified</Badge>
               )}
             </div>
 
-            {/* Unverified-only actions */}
             {!user.verified && (
-              <div className="flex flex-col gap-2 border-l-2 border-amber-300 pl-3">
-                <p className="text-sm text-gray-500">
+              <div className="flex flex-col gap-2 border-l-2 border-warning pl-3">
+                <p className="text-sm text-muted">
                   Verify your email to enable booking. Wrong email? Fix it
                   below.
                 </p>
 
                 <div className="flex gap-2 flex-wrap">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={handleResend}
                     disabled={resending}
-                    className="border rounded px-3 py-1 text-sm hover:bg-gray-50 disabled:opacity-50"
                   >
                     {resending ? "Sending…" : "Resend verification email"}
-                  </button>
+                  </Button>
                   {!editingEmail && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         setEmailInput(user.email);
                         setEmailMsg(null);
                         setEditingEmail(true);
                       }}
-                      className="border rounded px-3 py-1 text-sm hover:bg-gray-50"
                     >
                       Change email
-                    </button>
+                    </Button>
                   )}
                 </div>
 
                 {resendMsg && (
-                  <p
-                    className={`text-sm ${resendMsg.type === "ok" ? "text-green-700" : "text-red-600"}`}
+                  <Alert
+                    variant={resendMsg.type === "ok" ? "success" : "danger"}
                   >
                     {resendMsg.text}
-                  </p>
+                  </Alert>
                 )}
 
                 {editingEmail && (
@@ -352,40 +356,41 @@ export default function AccountPage() {
                     onSubmit={handleChangeEmail}
                     className="flex flex-col gap-2 mt-1"
                   >
-                    <input
+                    <Input
                       type="email"
                       value={emailInput}
                       onChange={(e) => setEmailInput(e.target.value)}
                       disabled={emailSubmitting}
-                      className="border rounded p-2"
                       placeholder="new@email.com"
                     />
                     <div className="flex gap-2">
-                      <button
+                      <Button
                         type="submit"
+                        size="sm"
+                        variant="secondary"
                         disabled={emailSubmitting}
-                        className="bg-black text-white rounded px-3 py-1 text-sm disabled:opacity-50"
                       >
                         {emailSubmitting ? "Saving…" : "Save new email"}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        size="sm"
+                        variant="ghost"
                         onClick={() => setEditingEmail(false)}
                         disabled={emailSubmitting}
-                        className="border rounded px-3 py-1 text-sm"
                       >
                         Cancel
-                      </button>
+                      </Button>
                     </div>
                   </form>
                 )}
 
                 {emailMsg && (
-                  <p
-                    className={`text-sm ${emailMsg.type === "ok" ? "text-green-700" : "text-red-600"}`}
+                  <Alert
+                    variant={emailMsg.type === "ok" ? "success" : "danger"}
                   >
                     {emailMsg.text}
-                  </p>
+                  </Alert>
                 )}
               </div>
             )}
@@ -393,38 +398,40 @@ export default function AccountPage() {
 
           {/* Phone row */}
           <div className="flex items-center gap-3">
-            <span className="text-gray-500">Phone:</span>
+            <span className="text-muted">Phone:</span>
 
             {editingPhone ? (
               <div className="flex items-center gap-2 flex-wrap">
-                <input
+                <Input
                   type="tel"
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
                   disabled={savingPhone}
-                  className="border rounded p-1"
+                  className="w-auto"
                 />
-                <button
+                <Button
+                  size="sm"
+                  variant="secondary"
                   onClick={savePhone}
                   disabled={savingPhone}
-                  className="bg-black text-white rounded px-3 py-1 text-sm disabled:opacity-50"
                 >
                   {savingPhone ? "Saving…" : "Save"}
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
                   onClick={cancelEditingPhone}
                   disabled={savingPhone}
-                  className="border rounded px-3 py-1 text-sm"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <span>{user.telephone}</span>
                 <button
                   onClick={startEditingPhone}
-                  className="text-sm text-blue-600 hover:underline"
+                  className="text-sm text-accent hover:underline"
                 >
                   Edit
                 </button>
@@ -432,179 +439,168 @@ export default function AccountPage() {
             )}
           </div>
 
-          {phoneError && <p className="text-red-600 text-sm">{phoneError}</p>}
-        </div>
+          {phoneError && <Alert variant="danger">{phoneError}</Alert>}
+        </Card>
       </section>
 
       {/* Address */}
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm text-gray-500">Address</h2>
+        <h2 className="text-sm text-muted">Address</h2>
 
         {editingAddress ? (
-          <form
-            onSubmit={saveAddress}
-            className="border rounded p-4 flex flex-col gap-3"
-          >
-            <div className="grid grid-cols-2 gap-3">
-              <label className="flex flex-col gap-1">
-                <span className="text-sm text-gray-500">Number</span>
-                <input
-                  type="number"
-                  value={addressForm.number}
-                  onChange={(e) =>
-                    handleAddressFieldChange("number", e.target.value)
-                  }
-                  required
-                  disabled={savingAddress}
-                  className="border rounded p-2"
-                />
-              </label>
+          <Card as="section">
+            <form onSubmit={saveAddress} className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm text-muted">Number</span>
+                  <Input
+                    type="number"
+                    value={addressForm.number}
+                    onChange={(e) =>
+                      handleAddressFieldChange("number", e.target.value)
+                    }
+                    required
+                    disabled={savingAddress}
+                  />
+                </label>
 
-              <label className="flex flex-col gap-1">
-                <span className="text-sm text-gray-500">
-                  Direction (optional)
-                </span>
-                <select
-                  value={addressForm.cardinalDirection}
-                  onChange={(e) =>
-                    handleAddressFieldChange(
-                      "cardinalDirection",
-                      e.target.value,
-                    )
-                  }
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm text-muted">
+                    Direction (optional)
+                  </span>
+                  <select
+                    value={addressForm.cardinalDirection}
+                    onChange={(e) =>
+                      handleAddressFieldChange(
+                        "cardinalDirection",
+                        e.target.value,
+                      )
+                    }
+                    disabled={savingAddress}
+                    className="border border-border rounded bg-surface px-3 py-2 text-base focus:outline-none focus:border-foreground focus:ring-2 focus:ring-accent disabled:opacity-50"
+                  >
+                    <option value="">—</option>
+                    {Object.entries(CardinalDirection).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="flex flex-col gap-1 col-span-2">
+                  <span className="text-sm text-muted">Street name</span>
+                  <Input
+                    type="text"
+                    value={addressForm.streetName}
+                    onChange={(e) =>
+                      handleAddressFieldChange("streetName", e.target.value)
+                    }
+                    required
+                    disabled={savingAddress}
+                  />
+                </label>
+
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm text-muted">Suffix</span>
+                  <select
+                    value={addressForm.suffix}
+                    onChange={(e) =>
+                      handleAddressFieldChange("suffix", e.target.value)
+                    }
+                    required
+                    disabled={savingAddress}
+                    className="border border-border rounded bg-surface px-3 py-2 text-base focus:outline-none focus:border-foreground focus:ring-2 focus:ring-accent disabled:opacity-50"
+                  >
+                    <option value="">Select…</option>
+                    {Object.entries(AddressSuffix).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm text-muted">City</span>
+                  <Input
+                    type="text"
+                    value={addressForm.city}
+                    onChange={(e) =>
+                      handleAddressFieldChange("city", e.target.value)
+                    }
+                    required
+                    disabled={savingAddress}
+                  />
+                </label>
+
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm text-muted">State</span>
+                  <select
+                    value={addressForm.state}
+                    onChange={(e) =>
+                      handleAddressFieldChange("state", e.target.value)
+                    }
+                    required
+                    disabled={savingAddress}
+                    className="border border-border rounded bg-surface px-3 py-2 text-base focus:outline-none focus:border-foreground focus:ring-2 focus:ring-accent disabled:opacity-50"
+                  >
+                    <option value="">Select…</option>
+                    {Object.entries(State).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm text-muted">Zip code</span>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    value={addressForm.zipCode}
+                    onChange={(e) =>
+                      handleAddressFieldChange("zipCode", e.target.value)
+                    }
+                    required
+                    disabled={savingAddress}
+                  />
+                </label>
+
+                <label className="flex flex-col gap-1 col-span-2">
+                  <span className="text-sm text-muted">Notes (optional)</span>
+                  <textarea
+                    value={addressForm.notes}
+                    onChange={(e) =>
+                      handleAddressFieldChange("notes", e.target.value)
+                    }
+                    disabled={savingAddress}
+                    rows={2}
+                    className="border border-border rounded bg-surface px-3 py-2 text-base focus:outline-none focus:border-foreground focus:ring-2 focus:ring-accent disabled:opacity-50"
+                  />
+                </label>
+              </div>
+
+              {addressError && <Alert variant="danger">{addressError}</Alert>}
+
+              <div className="flex gap-2">
+                <Button type="submit" disabled={savingAddress}>
+                  {savingAddress ? "Saving…" : "Save address"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={cancelEditingAddress}
                   disabled={savingAddress}
-                  className="border rounded p-2"
                 >
-                  <option value="">—</option>
-                  {Object.entries(CardinalDirection).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="flex flex-col gap-1 col-span-2">
-                <span className="text-sm text-gray-500">Street name</span>
-                <input
-                  type="text"
-                  value={addressForm.streetName}
-                  onChange={(e) =>
-                    handleAddressFieldChange("streetName", e.target.value)
-                  }
-                  required
-                  disabled={savingAddress}
-                  className="border rounded p-2"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1">
-                <span className="text-sm text-gray-500">Suffix</span>
-                <select
-                  value={addressForm.suffix}
-                  onChange={(e) =>
-                    handleAddressFieldChange("suffix", e.target.value)
-                  }
-                  required
-                  disabled={savingAddress}
-                  className="border rounded p-2"
-                >
-                  <option value="">Select…</option>
-                  {Object.entries(AddressSuffix).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="flex flex-col gap-1">
-                <span className="text-sm text-gray-500">City</span>
-                <input
-                  type="text"
-                  value={addressForm.city}
-                  onChange={(e) =>
-                    handleAddressFieldChange("city", e.target.value)
-                  }
-                  required
-                  disabled={savingAddress}
-                  className="border rounded p-2"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1">
-                <span className="text-sm text-gray-500">State</span>
-                <select
-                  value={addressForm.state}
-                  onChange={(e) =>
-                    handleAddressFieldChange("state", e.target.value)
-                  }
-                  required
-                  disabled={savingAddress}
-                  className="border rounded p-2"
-                >
-                  <option value="">Select…</option>
-                  {Object.entries(State).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="flex flex-col gap-1">
-                <span className="text-sm text-gray-500">Zip code</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={addressForm.zipCode}
-                  onChange={(e) =>
-                    handleAddressFieldChange("zipCode", e.target.value)
-                  }
-                  required
-                  disabled={savingAddress}
-                  className="border rounded p-2"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1 col-span-2">
-                <span className="text-sm text-gray-500">Notes (optional)</span>
-                <textarea
-                  value={addressForm.notes}
-                  onChange={(e) =>
-                    handleAddressFieldChange("notes", e.target.value)
-                  }
-                  disabled={savingAddress}
-                  rows={2}
-                  className="border rounded p-2"
-                />
-              </label>
-            </div>
-
-            {addressError && (
-              <p className="text-red-600 text-sm">{addressError}</p>
-            )}
-
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={savingAddress}
-                className="bg-black text-white rounded p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {savingAddress ? "Saving…" : "Save address"}
-              </button>
-              <button
-                type="button"
-                onClick={cancelEditingAddress}
-                disabled={savingAddress}
-                className="border rounded p-2"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Card>
         ) : primaryAddress ? (
-          <div className="border rounded p-4 flex flex-col gap-2">
+          <Card className="flex flex-col gap-2">
             <div>
               <p>
                 {primaryAddress.number} {primaryAddress.cardinalDirection}{" "}
@@ -615,30 +611,27 @@ export default function AccountPage() {
                 {primaryAddress.zipCode}
               </p>
               {primaryAddress.notes && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                   Notes: {primaryAddress.notes}
                 </p>
               )}
             </div>
             <button
               onClick={() => startEditingAddress(primaryAddress)}
-              className="text-sm text-blue-600 hover:underline self-start"
+              className="text-sm text-accent hover:underline self-start"
             >
               Edit
             </button>
-          </div>
+          </Card>
         ) : (
-          <div className="border border-dashed rounded p-4 flex flex-col gap-2">
-            <p className="text-sm text-gray-500">
-              You don't have an address on file. Add one to start booking.
+          <Card className="border-dashed flex flex-col gap-2">
+            <p className="text-sm text-muted">
+              You don&apos;t have an address on file. Add one to start booking.
             </p>
-            <button
-              onClick={startAddingAddress}
-              className="bg-black text-white rounded p-2 self-start"
-            >
+            <Button onClick={startAddingAddress} className="self-start">
               Add address
-            </button>
-          </div>
+            </Button>
+          </Card>
         )}
       </section>
     </div>

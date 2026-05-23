@@ -1,28 +1,25 @@
 "use client";
 
 import clsx from "clsx";
-import { TextareaHTMLAttributes, forwardRef } from "react";
+import { SelectHTMLAttributes, forwardRef } from "react";
 
-type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
+type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   invalid?: boolean;
 };
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ invalid = false, className, rows = 3, ...rest }, ref) => {
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(
+  ({ invalid = false, className, children, ...rest }, ref) => {
     return (
-      <textarea
+      <select
         ref={ref}
-        rows={rows}
         aria-invalid={invalid || undefined}
         className={clsx(
           // base — mirrors Input
           "block w-full rounded bg-surface text-foreground",
           "px-3 py-2 text-base",
           "border border-border",
-          "placeholder:text-muted/60",
-          "resize-y", // vertical resize only — horizontal looks broken in forms
 
-          // focus
+          // focus — same ring as Input/Button
           "focus:outline-none focus:border-foreground focus:ring-2 focus:ring-accent",
 
           // disabled
@@ -34,9 +31,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           className,
         )}
         {...rest}
-      />
+      >
+        {children}
+      </select>
     );
   },
 );
 
-Textarea.displayName = "Textarea";
+Select.displayName = "Select";

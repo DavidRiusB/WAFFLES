@@ -4,6 +4,9 @@ import { Card } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Alert } from "@/src/components/ui/alert";
 
+import { Textarea } from "@/src/components/ui/textarea";
+import { Select } from "@/src/components/ui/select";
+
 export default function Page() {
   return (
     <div>
@@ -142,6 +145,28 @@ export default function Page() {
             </Button>
           </div>
         </Alert>
+      </div>
+      <div className="p-6 flex flex-col gap-4 max-w-md">
+        <Select defaultValue="">
+          <option value="">Pick one…</option>
+          <option value="a">Option A</option>
+          <option value="b">Option B</option>
+        </Select>
+
+        <Select invalid defaultValue="">
+          <option value="">Invalid select</option>
+          <option value="a">Option A</option>
+        </Select>
+
+        <Select disabled defaultValue="a">
+          <option value="a">Disabled</option>
+        </Select>
+
+        <Textarea placeholder="Multi-line input…" />
+
+        <Textarea invalid placeholder="Errored textarea" />
+
+        <Textarea disabled defaultValue="Disabled with value" />
       </div>
     </div>
   );
