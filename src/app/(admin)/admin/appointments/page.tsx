@@ -2,6 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Card } from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Select } from "@/src/components/ui/select";
+import { Badge } from "@/src/components/ui/badge";
+import { Alert } from "@/src/components/ui/alert";
+import { statusVariant, AppointmentStatus } from "@/src/lib/appointment-status";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -16,21 +23,28 @@ type AdminAppointment = {
   id: number;
   date: string;
   slot: string;
-  status: string;
+  status: AppointmentStatus;
   notes: string | null;
   user: AppointmentUser;
 };
 
-// Match your backend enums
 const STATUSES = ["SCHEDULED", "CONFIRMED", "COMPLETED", "CANCELLED"] as const;
 const SLOTS = ["MORNING", "AFTERNOON", "EVENING"] as const;
 
 type Filters = {
   startDate: string;
   endDate: string;
-  status: string; // "" = all
-  slot: string; // "" = all
+  status: string;
+  slot: string;
 };
+
+const PRESETS = [
+  { key: "next14", label: "Next 14 days" },
+  { key: "thisWeek", label: "This week" },
+  { key: "lastWeek", label: "Last week" },
+  { key: "thisMonth", label: "This month" },
+  { key: "lastMonth", label: "Last month" },
+];
 
 function formatDay(isoDate: string): string {
   const d = new Date(isoDate + "T00:00:00");
@@ -55,7 +69,6 @@ function addDays(base: Date, days: number): Date {
   return d;
 }
 
-// Preset range generators
 function presetRange(preset: string): { startDate: string; endDate: string } {
   const today = new Date();
 
@@ -64,7 +77,7 @@ function presetRange(preset: string): { startDate: string; endDate: string } {
       return { startDate: toIso(today), endDate: toIso(addDays(today, 14)) };
     }
     case "thisWeek": {
-      const day = today.getDay(); // 0 = Sun
+      const day = today.getDay();
       const monday = addDays(today, day === 0 ? -6 : 1 - day);
       const sunday = addDays(monday, 6);
       return { startDate: toIso(monday), endDate: toIso(sunday) };
@@ -119,9 +132,7 @@ export default function AdminAppointmentsPage() {
 
         const res = await fetch(
           `${API_BASE}/appointments?${params.toString()}`,
-          {
-            credentials: "include",
-          },
+          { credentials: "include" },
         );
         if (!res.ok) {
           const data = await res.json().catch(() => null);
@@ -151,7 +162,6 @@ export default function AdminAppointmentsPage() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Group by date
   const grouped = appointments.reduce<Record<string, AdminAppointment[]>>(
     (acc, appt) => {
       (acc[appt.date] ??= []).push(appt);
@@ -167,49 +177,44 @@ export default function AdminAppointmentsPage() {
 
       {/* Preset buttons */}
       <div className="flex gap-2 flex-wrap">
-        {[
-          { key: "next14", label: "Next 14 days" },
-          { key: "thisWeek", label: "This week" },
-          { key: "lastWeek", label: "Last week" },
-          { key: "thisMonth", label: "This month" },
-          { key: "lastMonth", label: "Last month" },
-        ].map((p) => (
-          <button
+        {PRESETS.map((p) => (
+          <Button
             key={p.key}
+            variant="ghost"
+            size="sm"
             onClick={() => applyPreset(p.key)}
-            className="px-3 py-2 rounded border text-sm bg-white hover:bg-gray-50"
           >
             {p.label}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Custom range + filters */}
-      <div className="flex gap-3 flex-wrap items-end border rounded p-4">
+      <Card className="flex gap-3 flex-wrap items-end">
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">From</span>
-          <input
+          <span className="text-muted">From</span>
+          <Input
             type="date"
             value={filters.startDate}
             onChange={(e) => updateFilter("startDate", e.target.value)}
-            className="border rounded p-2"
+            className="w-auto"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">To</span>
-          <input
+          <span className="text-muted">To</span>
+          <Input
             type="date"
             value={filters.endDate}
             onChange={(e) => updateFilter("endDate", e.target.value)}
-            className="border rounded p-2"
+            className="w-auto"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">Status</span>
-          <select
+          <span className="text-muted">Status</span>
+          <Select
             value={filters.status}
             onChange={(e) => updateFilter("status", e.target.value)}
-            className="border rounded p-2"
+            className="w-auto"
           >
             <option value="">All</option>
             {STATUSES.map((s) => (
@@ -217,14 +222,14 @@ export default function AdminAppointmentsPage() {
                 {s}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-gray-500">Slot</span>
-          <select
+          <span className="text-muted">Slot</span>
+          <Select
             value={filters.slot}
             onChange={(e) => updateFilter("slot", e.target.value)}
-            className="border rounded p-2"
+            className="w-auto"
           >
             <option value="">All</option>
             {SLOTS.map((s) => (
@@ -232,46 +237,50 @@ export default function AdminAppointmentsPage() {
                 {s}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
-      </div>
+      </Card>
 
       {/* Results */}
       {loading ? (
-        <div className="text-gray-500 p-6">Loading…</div>
+        <p className="text-muted p-6">Loading…</p>
       ) : error ? (
-        <div className="text-red-600 p-6">Error: {error}</div>
+        <Alert variant="danger">{error}</Alert>
       ) : sortedDates.length === 0 ? (
-        <div className="border border-dashed rounded p-6 text-gray-500 text-sm">
-          No appointments match these filters.
-        </div>
+        <Card className="border-dashed">
+          <p className="text-muted text-sm">
+            No appointments match these filters.
+          </p>
+        </Card>
       ) : (
         <div className="flex flex-col gap-6">
           {sortedDates.map((date) => (
             <section key={date} className="flex flex-col gap-2">
-              <h2 className="text-sm text-gray-500">{formatDay(date)}</h2>
+              <h2 className="text-sm text-muted">{formatDay(date)}</h2>
               <div className="flex flex-col gap-2">
                 {grouped[date].map((appt) => (
                   <Link
                     key={appt.id}
                     href={`/admin/appointments/${appt.id}`}
-                    className="border rounded p-4 hover:bg-gray-50 flex justify-between items-start"
+                    className="block rounded-lg border border-border bg-surface p-4 hover:border-foreground transition-colors"
                   >
-                    <div className="flex flex-col gap-1">
-                      <span className="font-medium">
-                        {appt.user.firstName} {appt.user.lastName} ·{" "}
-                        {appt.user.telephone}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {appt.slot}
-                        {appt.notes
-                          ? ` · "${appt.notes.slice(0, 60)}${appt.notes.length > 60 ? "…" : ""}"`
-                          : ""}
-                      </span>
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-bold">
+                          {appt.user.firstName} {appt.user.lastName} ·{" "}
+                          {appt.user.telephone}
+                        </span>
+                        <span className="text-sm text-muted">
+                          {appt.slot}
+                          {appt.notes
+                            ? ` · "${appt.notes.slice(0, 60)}${appt.notes.length > 60 ? "…" : ""}"`
+                            : ""}
+                        </span>
+                      </div>
+                      <Badge variant={statusVariant(appt.status)}>
+                        {appt.status}
+                      </Badge>
                     </div>
-                    <span className="text-sm uppercase tracking-wide">
-                      {appt.status}
-                    </span>
                   </Link>
                 ))}
               </div>

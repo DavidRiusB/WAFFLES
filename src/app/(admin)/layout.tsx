@@ -1,5 +1,7 @@
 "use client";
 
+import AdminSidebar from "@/src/components/layout/admin-sidebar";
+import { PageContainer } from "@/src/components/ui/PageContainer";
 import { useUser } from "@/src/context/user-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -23,5 +25,13 @@ export default function AdminLayout({
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <div className="flex min-h-screen bg-white">
+      <AdminSidebar />
+
+      <main className="flex-1">
+        <PageContainer>{children}</PageContainer>
+      </main>
+    </div>
+  );
 }

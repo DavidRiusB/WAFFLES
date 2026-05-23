@@ -1,5 +1,10 @@
 "use client";
 
+import { Alert } from "@/src/components/ui/alert";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
+import { Card } from "@/src/components/ui/card";
+import { statusVariant } from "@/src/lib/appointment-status";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -135,21 +140,21 @@ export default function AppointmentDetailPage() {
     }
   };
 
-  if (loading) return <div className="p-6">Loading…</div>;
-  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
+  if (loading) return <p className="text-muted">Loading…</p>;
+  if (error) return <Alert variant="danger">{error}</Alert>;
   if (!appointment) return null;
 
   const primaryAddress =
     appointment.user.addresses?.find((a) => a.isPrimary) ?? null;
 
   return (
-    <div className="flex flex-col gap-8 max-w-3xl p-6">
+    <div className="flex flex-col gap-8 max-w-3xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Appointment</h1>
         <button
           onClick={() => router.back()}
-          className="text-sm text-blue-600 hover:underline"
+          className="text-sm text-accent hover:underline"
         >
           ← Back
         </button>
@@ -158,80 +163,81 @@ export default function AppointmentDetailPage() {
       {/* Status + actions */}
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500">Current status:</span>
-          <span className="text-sm uppercase tracking-wide font-medium">
+          <span className="text-sm text-muted">Current status:</span>
+          <Badge variant={statusVariant(appointment.status)}>
             {appointment.status}
-          </span>
+          </Badge>
         </div>
 
         <div className="flex gap-2 flex-wrap">
           {ALL_STATUSES.map((s) => (
-            <button
+            <Button
               key={s}
+              variant={s === "CANCELLED" ? "danger" : "ghost"}
+              size="sm"
               onClick={() => changeStatus(s)}
               disabled={updating || appointment.status === s}
-              className="border rounded px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
             >
               {updating ? "…" : `Set to ${s}`}
-            </button>
+            </Button>
           ))}
         </div>
 
-        {updateError && <p className="text-red-600 text-sm">{updateError}</p>}
+        {updateError && <Alert variant="danger">{updateError}</Alert>}
       </section>
 
       {/* Appointment details */}
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm text-gray-500">Details</h2>
-        <div className="border rounded p-4 flex flex-col gap-1">
+        <h2 className="text-sm text-muted">Details</h2>
+        <Card className="flex flex-col gap-1">
           <p>
-            <span className="text-gray-500">Date: </span>
+            <span className="text-muted">Date: </span>
             {formatDay(appointment.date)}
           </p>
           <p>
-            <span className="text-gray-500">Time slot: </span>
+            <span className="text-muted">Time slot: </span>
             {appointment.slot}
           </p>
           {appointment.notes ? (
             <p>
-              <span className="text-gray-500">Notes: </span>
+              <span className="text-muted">Notes: </span>
               {appointment.notes}
             </p>
           ) : (
-            <p className="text-gray-500 text-sm">No notes.</p>
+            <p className="text-muted text-sm">No notes.</p>
           )}
-        </div>
+        </Card>
       </section>
 
       {/* Customer */}
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm text-gray-500">Customer</h2>
-        <div className="border rounded p-4 flex flex-col gap-1">
-          <p className="font-medium">
+        <h2 className="text-sm text-muted">Customer</h2>
+        <Card className="flex flex-col gap-1">
+          <p className="font-bold">
             {appointment.user.firstName} {appointment.user.lastName}
           </p>
           <p>
-            <span className="text-gray-500">Email: </span>
+            <span className="text-muted">Email: </span>
             {appointment.user.email}
           </p>
           <p>
-            <span className="text-gray-500">Phone: </span>
+            <span className="text-muted">Phone: </span>
             {appointment.user.telephone}
           </p>
           <Link
             href={`/admin/users/${appointment.user.id}`}
-            className="text-sm text-blue-600 hover:underline self-start mt-1"
+            className="text-sm text-accent hover:underline self-start mt-1"
           >
             View customer profile →
           </Link>
-        </div>
+        </Card>
       </section>
 
       {/* Address */}
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm text-gray-500">Service address</h2>
+        <h2 className="text-sm text-muted">Service address</h2>
         {primaryAddress ? (
-          <div className="border rounded p-4">
+          <Card>
             <p>
               {primaryAddress.number} {primaryAddress.cardinalDirection}{" "}
               {primaryAddress.streetName} {primaryAddress.suffix}
@@ -240,11 +246,11 @@ export default function AppointmentDetailPage() {
               {primaryAddress.city}, {primaryAddress.state}{" "}
               {primaryAddress.zipCode}
             </p>
-          </div>
+          </Card>
         ) : (
-          <div className="border border-dashed rounded p-4 text-gray-500 text-sm">
-            No primary address on file.
-          </div>
+          <Card className="border-dashed">
+            <p className="text-muted text-sm">No primary address on file.</p>
+          </Card>
         )}
       </section>
     </div>

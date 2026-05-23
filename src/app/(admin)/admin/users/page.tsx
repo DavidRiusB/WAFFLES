@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Input } from "@/src/components/ui/input";
+import { Button } from "@/src/components/ui/button";
+import { Card } from "@/src/components/ui/card";
+import { Alert } from "@/src/components/ui/alert";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -50,46 +54,45 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-2xl p-6">
+    <div className="flex flex-col gap-6 max-w-2xl">
       <h1 className="text-2xl font-bold">Customers</h1>
 
       <form onSubmit={handleSearch} className="flex gap-2">
-        <input
+        <Input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by name, email, or phone"
-          className="border rounded p-2 flex-1"
         />
-        <button
-          type="submit"
-          disabled={searching}
-          className="bg-black text-white rounded px-4 disabled:opacity-50"
-        >
+        <Button type="submit" disabled={searching}>
           {searching ? "Searching…" : "Search"}
-        </button>
+        </Button>
       </form>
 
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && <Alert variant="danger">{error}</Alert>}
 
       {results !== null && (
         <div className="flex flex-col gap-2">
           {results.length === 0 ? (
-            <p className="text-gray-500">No customers found.</p>
+            <Card className="border-dashed">
+              <p className="text-muted text-sm">No customers found.</p>
+            </Card>
           ) : (
             results.map((customer) => (
               <Link
                 key={customer.id}
                 href={`/admin/users/${customer.id}`}
-                className="border rounded p-4 hover:bg-gray-50 flex flex-col"
+                className="block rounded-lg border border-border bg-surface p-4 hover:border-foreground transition-colors"
               >
-                <span className="font-medium">
-                  {customer.firstName} {customer.lastName}
-                </span>
-                <span className="text-sm text-gray-500">{customer.email}</span>
-                <span className="text-sm text-gray-500">
-                  {customer.telephone}
-                </span>
+                <div className="flex flex-col">
+                  <span className="font-bold">
+                    {customer.firstName} {customer.lastName}
+                  </span>
+                  <span className="text-sm text-muted">{customer.email}</span>
+                  <span className="text-sm text-muted">
+                    {customer.telephone}
+                  </span>
+                </div>
               </Link>
             ))
           )}
