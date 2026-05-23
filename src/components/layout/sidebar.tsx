@@ -22,12 +22,12 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 h-screen bg-[#242423] text-[#e8eddfff] flex flex-col">
+    <aside className="w-64 h-screen bg-secondary text-on-secondary flex flex-col">
       {/* Logo */}
-      <div className="px-6 py-6 border-b border-[#333533] flex items-center gap-3">
-        <Image src="/logo.png" alt="WAFFLES logo" width={64} height={64} />
-        <span className={`${brandFont.className} text-lg font-semibold`}>
-          Egalisys<span className="text-[#f5cb5c]">Tech</span>
+      <div className="px-6 py-6 border-b border-muted flex items-center gap-3">
+        <Image src="/logo.png" alt="EgalisysTech logo" width={64} height={64} />
+        <span className={`${brandFont.className} text-lg font-bold`}>
+          Egalisys<span className="text-accent">Tech</span>
         </span>
       </div>
 
@@ -41,11 +41,11 @@ export default function Sidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-150
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors
                 ${
                   isActive
-                    ? "bg-[#333533] text-white border-l-4 border-[#f5cb5c]"
-                    : "text-[#cfdbd5ff] hover:bg-[#333533] hover:text-white"
+                    ? "bg-muted text-on-secondary border-l-4 border-accent"
+                    : "text-on-secondary/70 hover:bg-muted hover:text-on-secondary"
                 }
               `}
             >
@@ -57,9 +57,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="mt-auto px-6 py-4 text-sm text-[#cfdbd5] opacity-70">
-        v1.0
-      </div>
+      <div className="mt-auto px-6 py-4 text-sm text-on-secondary/50">v1.0</div>
     </aside>
   );
 }
