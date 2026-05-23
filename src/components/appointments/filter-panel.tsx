@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Select } from "../ui/select-component";
+import { Input } from "@/src/components/ui/input";
+import { Button } from "@/src/components/ui/button";
 
 type Props = {
   isOpen: boolean;
@@ -14,69 +16,55 @@ export function FilterPanel({ isOpen, onClose, onApply }: Props) {
   const [slot, setSlot] = useState("");
   const [date, setDate] = useState("");
 
-  const [filters, setFilters] = useState<{
-    status?: string;
-    slot?: string;
-    date?: string;
-  }>({});
-
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="absolute inset-0 bg-foreground/30" onClick={onClose} />
 
       {/* Panel */}
-      <div className="relative w-80 h-full bg-white shadow-xl p-6 flex flex-col gap-6">
+      <div className="relative w-80 h-full bg-surface border-l border-border p-6 flex flex-col gap-6">
         <h2 className="text-lg font-bold">Filters</h2>
 
         {/* Status */}
-        <div>
-          <label className="text-sm text-gray-500">Status</label>
-          <Select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="border p-2 w-full mt-1"
-          >
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-muted">Status</span>
+          <Select value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">All</option>
             <option value="SCHEDULED">Scheduled</option>
             <option value="CONFIRMED">Confirmed</option>
             <option value="COMPLETED">Completed</option>
             <option value="CANCELLED">Cancelled</option>
           </Select>
-        </div>
+        </label>
 
         {/* Slot */}
-        <div>
-          <label className="text-sm text-gray-500">Slot</label>
-          <Select
-            value={slot}
-            onChange={(e) => setSlot(e.target.value)}
-            className="border p-2 w-full mt-1"
-          >
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-muted">Slot</span>
+          <Select value={slot} onChange={(e) => setSlot(e.target.value)}>
             <option value="">All</option>
             <option value="MORNING">Morning</option>
             <option value="MIDDAY">Afternoon</option>
             <option value="AFTERNOON">Evening</option>
           </Select>
-        </div>
+        </label>
 
         {/* Date */}
-        <div>
-          <label className="text-sm text-gray-500">Date</label>
-          <input
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-muted">Date</span>
+          <Input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border p-2 w-full mt-1"
           />
-        </div>
+        </label>
 
         {/* Actions */}
         <div className="mt-auto flex gap-2">
-          <button
-            className="flex-1 border p-2 rounded"
+          <Button
+            variant="ghost"
+            fullWidth
             onClick={() => {
               setStatus("");
               setSlot("");
@@ -84,22 +72,21 @@ export function FilterPanel({ isOpen, onClose, onApply }: Props) {
             }}
           >
             Reset
-          </button>
+          </Button>
 
-          <button
-            className="flex-1 bg-yellow-400 text-black p-2 rounded"
+          <Button
+            fullWidth
             onClick={() => {
               onApply({
                 status: status || undefined,
                 slot: slot || undefined,
                 date: date || undefined,
               });
-
               onClose();
             }}
           >
             Apply
-          </button>
+          </Button>
         </div>
       </div>
     </div>

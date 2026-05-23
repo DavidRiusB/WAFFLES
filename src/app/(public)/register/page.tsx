@@ -8,6 +8,7 @@ import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { useUser } from "@/src/context/user-context";
 import { FormField } from "@/src/components/ui/form-field";
+import { Card } from "@/src/components/ui/card";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -45,7 +46,6 @@ export default function RegisterPage() {
     setSubmitting(true);
 
     try {
-      // Don't send confirmPassword to the backend — it doesn't need it
       const { confirmPassword, ...payload } = form;
 
       const res = await fetch(`${API_BASE}/auth/register`, {
@@ -146,9 +146,9 @@ export default function RegisterPage() {
         {submitting ? "Creating account…" : "Register"}
       </Button>
 
-      <p className="text-sm text-center text-gray-500">
+      <p className="text-sm text-center text-muted">
         Already have an account?{" "}
-        <Link href="/login" className="text-blue-600 hover:underline">
+        <Link href="/login" className="text-accent hover:underline">
           Log in
         </Link>
       </p>

@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { Input } from "@/src/components/ui/input";
+import { Button } from "@/src/components/ui/button";
+import { Alert } from "@/src/components/ui/alert";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -62,12 +65,12 @@ export default function ResetPasswordPage() {
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-md flex flex-col gap-4 text-center">
           <h1 className="text-xl font-bold">Invalid reset link</h1>
-          <p className="text-gray-600">
+          <p className="text-muted">
             This link is missing its token. Request a new one.
           </p>
           <Link
             href="/forgot-password"
-            className="bg-black text-white rounded p-2 mt-2"
+            className="text-sm text-accent hover:underline mt-2"
           >
             Request a new link
           </Link>
@@ -82,11 +85,14 @@ export default function ResetPasswordPage() {
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-md flex flex-col gap-4 text-center">
           <h1 className="text-xl font-bold">Password reset ✅</h1>
-          <p className="text-gray-600">
+          <p className="text-muted">
             Your password has been updated. You can now log in with your new
             password.
           </p>
-          <Link href="/login" className="bg-black text-white rounded p-2 mt-2">
+          <Link
+            href="/login"
+            className="text-sm text-accent hover:underline mt-2"
+          >
             Go to login
           </Link>
         </div>
@@ -103,33 +109,27 @@ export default function ResetPasswordPage() {
       >
         <h1 className="text-xl font-bold">Set a new password</h1>
 
-        <input
+        <Input
           type="password"
           placeholder="New password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           disabled={submitting}
-          className="border p-2 rounded"
         />
 
-        <input
+        <Input
           type="password"
           placeholder="Confirm new password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           disabled={submitting}
-          className="border p-2 rounded"
         />
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {error && <Alert variant="danger">{error}</Alert>}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-black text-white rounded p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <Button type="submit" disabled={submitting}>
           {submitting ? "Resetting…" : "Reset password"}
-        </button>
+        </Button>
       </form>
     </div>
   );

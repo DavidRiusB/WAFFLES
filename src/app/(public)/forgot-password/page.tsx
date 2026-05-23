@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Input } from "@/src/components/ui/input";
+import { Button } from "@/src/components/ui/button";
+import { Alert } from "@/src/components/ui/alert";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -46,11 +49,14 @@ export default function ForgotPasswordPage() {
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="w-80 flex flex-col gap-4 text-center">
           <h1 className="text-xl font-bold">Check your email</h1>
-          <p className="text-gray-600">
+          <p className="text-muted">
             If an account exists for that email, we&apos;ve sent a password
             reset link. It expires in 1 hour.
           </p>
-          <Link href="/login" className="bg-black text-white rounded p-2 mt-2">
+          <Link
+            href="/login"
+            className="text-sm text-accent hover:underline mt-2"
+          >
             Back to login
           </Link>
         </div>
@@ -62,32 +68,27 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center p-6">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80">
         <h1 className="text-xl font-bold">Forgot password</h1>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted">
           Enter your email and we&apos;ll send you a reset link.
         </p>
 
-        <input
+        <Input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={submitting}
-          className="border p-2"
         />
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {error && <Alert variant="danger">{error}</Alert>}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-black text-white p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <Button type="submit" disabled={submitting}>
           {submitting ? "Sending…" : "Send reset link"}
-        </button>
+        </Button>
 
         <Link
           href="/login"
-          className="text-sm text-blue-600 hover:underline text-center"
+          className="text-sm text-accent hover:underline text-center"
         >
           Back to login
         </Link>

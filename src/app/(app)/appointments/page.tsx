@@ -5,18 +5,19 @@ import { Button } from "@/src/components/ui/button";
 import { AppointmentCard } from "@/src/components/appointments/appointment-card";
 import type { Appointment } from "@/src/types/appointment";
 import { FilterPanel } from "@/src/components/appointments/filter-panel";
+import { Alert } from "@/src/components/ui/alert";
+import { Card } from "@/src/components/ui/card";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 function EmptyState() {
   return (
-    <div className="border border-dashed border-gray-300 rounded-xl p-10 text-center">
-      <p className="text-gray-500 mb-4">You have no appointments yet</p>
-
+    <Card className="border-dashed p-8 text-center flex flex-col items-center gap-4">
+      <p className="text-muted">You have no appointments yet</p>
       <Link href="/appointments/new">
         <Button>Create your first appointment</Button>
       </Link>
-    </div>
+    </Card>
   );
 }
 
@@ -76,27 +77,26 @@ export default function AppointmentsPage() {
         <h1 className="text-2xl font-bold">Appointments</h1>
 
         <div className="flex items-center gap-2">
-          {/* Filter button */}
-          <button
-            onClick={() => setShowFilters(true)}
-            className="border px-3 py-2 rounded hover:bg-gray-100"
-          >
+          <Button variant="ghost" onClick={() => setShowFilters(true)}>
             ⚙️ Filters
-          </button>
+          </Button>
 
-          {/* New appointment */}
           <Link href="/appointments/new">
             <Button>New Appointment</Button>
           </Link>
         </div>
       </div>
+      <FilterPanel
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        onApply={(newFilters) => setFilters(newFilters)}
+      />
 
       {/* Content */}
-
       {loading ? (
-        <div className="text-gray-500 p-6">Loading appointments…</div>
+        <p className="text-muted p-6">Loading appointments…</p>
       ) : error ? (
-        <div className="text-red-600 p-6">Error: {error}</div>
+        <Alert variant="danger">{error}</Alert>
       ) : appointments.length === 0 ? (
         <EmptyState />
       ) : (

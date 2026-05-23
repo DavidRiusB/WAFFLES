@@ -1,5 +1,9 @@
 "use client";
 
+import { Alert } from "@/src/components/ui/alert";
+import { Button } from "@/src/components/ui/button";
+import { Textarea } from "@/src/components/ui/textarea";
+import clsx from "clsx";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -141,46 +145,59 @@ export default function NewAppointmentPage() {
 
       {/* Step 1: Date strip */}
       <section>
-        <h2 className="text-sm text-gray-500 mb-2">Pick a date</h2>
+        <h2 className="text-sm text-muted mb-2">Pick a date</h2>
         <div className="flex gap-2 overflow-x-auto">
-          {availability.map((day) => (
-            <button
-              key={day.date}
-              onClick={() => {
-                setSelectedDate(day.date);
-                setSelectedSlot(null);
-              }}
-              className={`px-4 py-2 rounded border ${
-                selectedDate === day.date ? "bg-black text-white" : "bg-white"
-              }`}
-            >
-              {formatDay(day.date)}
-            </button>
-          ))}
+          {availability.map((day) => {
+            const isSelected = selectedDate === day.date;
+            return (
+              <button
+                key={day.date}
+                onClick={() => {
+                  setSelectedDate(day.date);
+                  setSelectedSlot(null);
+                }}
+                className={clsx(
+                  "px-4 py-2 rounded border whitespace-nowrap",
+                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                  isSelected
+                    ? "bg-secondary text-on-secondary border-secondary"
+                    : "bg-surface text-foreground border-border hover:border-foreground",
+                )}
+              >
+                {formatDay(day.date)}
+              </button>
+            );
+          })}
         </div>
       </section>
 
       {/* Step 2: Slot cards */}
       {selectedDate && dayData && (
         <section>
-          <h2 className="text-sm text-gray-500 mb-2">Pick a slot</h2>
+          <h2 className="text-sm text-muted mb-2">Pick a slot</h2>
           <div className="grid grid-cols-3 gap-2">
-            {dayData.slots.map((s) => (
-              <button
-                key={s.slot}
-                disabled={!s.available}
-                onClick={() => setSelectedSlot(s.slot)}
-                className={`p-4 rounded border ${
-                  !s.available
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : selectedSlot === s.slot
-                      ? "bg-black text-white"
-                      : "bg-white"
-                }`}
-              >
-                {s.slot}
-              </button>
-            ))}
+            {dayData.slots.map((s) => {
+              const isSelected = selectedSlot === s.slot;
+              const isDisabled = !s.available;
+              return (
+                <button
+                  key={s.slot}
+                  disabled={isDisabled}
+                  onClick={() => setSelectedSlot(s.slot)}
+                  className={clsx(
+                    "p-4 rounded border text-base font-bold",
+                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                    isDisabled
+                      ? "bg-border/40 text-muted/60 border-border cursor-not-allowed"
+                      : isSelected
+                        ? "bg-secondary text-on-secondary border-secondary"
+                        : "bg-surface text-foreground border-border hover:border-foreground",
+                  )}
+                >
+                  {s.slot}
+                </button>
+              );
+            })}
           </div>
         </section>
       )}
@@ -188,23 +205,24 @@ export default function NewAppointmentPage() {
       {/* Step 3: Notes + confirm */}
       {selectedSlot && (
         <section className="flex flex-col gap-2">
-          <label className="text-sm text-gray-500">Notes (optional)</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="border rounded p-2"
-            rows={3}
-          />
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-muted">Notes (optional)</span>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+            />
+          </label>
 
-          {submitError && <p className="text-red-600 text-sm">{submitError}</p>}
+          {submitError && <Alert variant="danger">{submitError}</Alert>}
 
-          <button
+          <Button
             onClick={handleConfirm}
             disabled={submitting}
-            className="bg-black text-white rounded p-2 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-2"
           >
             {submitting ? "Creating…" : "Confirm appointment"}
-          </button>
+          </Button>
         </section>
       )}
     </div>

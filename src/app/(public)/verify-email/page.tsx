@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Alert } from "@/src/components/ui/alert";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -15,8 +16,6 @@ export default function VerifyEmailPage() {
   const [status, setStatus] = useState<Status>("verifying");
   const [errorMsg, setErrorMsg] = useState<string>("");
 
-  // Guard against React Strict Mode double-invoke in dev,
-  // which would fire the request twice (2nd fails — token consumed).
   const firedRef = useRef(false);
 
   useEffect(() => {
@@ -62,21 +61,19 @@ export default function VerifyEmailPage() {
         {status === "verifying" && (
           <>
             <h1 className="text-xl font-bold">Verifying your email…</h1>
-            <p className="text-gray-500">
-              Hang tight, this only takes a moment.
-            </p>
+            <p className="text-muted">Hang tight, this only takes a moment.</p>
           </>
         )}
 
         {status === "success" && (
           <>
             <h1 className="text-xl font-bold">Email verified ✅</h1>
-            <p className="text-gray-600">
+            <p className="text-muted">
               Your email is confirmed. You can now book appointments.
             </p>
             <Link
               href="/login"
-              className="bg-black text-white rounded p-2 mt-2"
+              className="text-sm text-accent hover:underline mt-2"
             >
               Go to login
             </Link>
@@ -86,14 +83,14 @@ export default function VerifyEmailPage() {
         {status === "error" && (
           <>
             <h1 className="text-xl font-bold">Verification failed</h1>
-            <p className="text-red-600">{errorMsg}</p>
-            <p className="text-gray-500 text-sm">
+            <Alert variant="danger">{errorMsg}</Alert>
+            <p className="text-sm text-muted">
               The link may have expired or already been used. Log in and request
               a new verification email.
             </p>
             <Link
               href="/login"
-              className="bg-black text-white rounded p-2 mt-2"
+              className="text-sm text-accent hover:underline mt-2"
             >
               Go to login
             </Link>

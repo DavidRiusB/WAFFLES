@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/src/context/user-context";
+import { Input } from "@/src/components/ui/input";
+import { Button } from "@/src/components/ui/button";
+import { Alert } from "@/src/components/ui/alert";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -52,48 +54,42 @@ export default function Page() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center p-6">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80">
         <h1 className="text-xl font-bold">Login</h1>
 
-        <input
+        <Input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="border p-2"
           disabled={submitting}
         />
 
-        <input
+        <Input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="border p-2"
           disabled={submitting}
         />
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {error && <Alert variant="danger">{error}</Alert>}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-black text-white p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <Button type="submit" disabled={submitting}>
           {submitting ? "Logging in…" : "Login"}
-        </button>
+        </Button>
 
         <Link
           href="/forgot-password"
-          className="text-sm text-blue-600 hover:underline text-center"
+          className="text-sm text-accent hover:underline text-center"
         >
           Forgot password?
         </Link>
 
-        <p className="text-sm text-center text-gray-500">
+        <p className="text-sm text-center text-muted">
           No account?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline">
+          <Link href="/register" className="text-accent hover:underline">
             Register
           </Link>
         </p>
