@@ -82,14 +82,17 @@ export default function Page() {
 
         <Link
           href="/forgot-password"
-          className="text-sm text-accent hover:underline text-center"
+          className="text-sm hover:underline text-center underline hover:opacity-70 transition-opacity"
         >
           Forgot password?
         </Link>
 
         <p className="text-sm text-center text-muted">
           No account?{" "}
-          <Link href="/register" className="text-accent hover:underline">
+          <Link
+            href="/register"
+            className="text-sm hover:underline text-center underline hover:opacity-70 transition-opacity"
+          >
             Register
           </Link>
         </p>

@@ -15,6 +15,13 @@ type AvailabilityDay = {
   slots: { slot: string; available: boolean }[];
 };
 
+type CurrentUser = {
+  id: number;
+  email: string;
+  verified: boolean;
+  addresses?: { id: number; isPrimary: boolean }[];
+};
+
 function formatDay(isoDate: string): string {
   const d = new Date(isoDate + "T00:00:00");
   return d.toLocaleDateString("en-US", {
@@ -25,31 +32,31 @@ function formatDay(isoDate: string): string {
 }
 
 export default function NewAppointmentPage() {
-  // Availability
   const [availability, setAvailability] = useState<AvailabilityDay[]>([]);
+  const [user, setUser] = useState<CurrentUser | null>(null);
 
-  // Address gate
-  const [hasAddress, setHasAddress] = useState(false);
-
-  // Shared load state for both fetches
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Selection
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
 
-  // Submit
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Resend verification
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState<{
+    type: "ok" | "err";
+    text: string;
+  } | null>(null);
 
   const router = useRouter();
 
   useEffect(() => {
     const load = async () => {
       try {
-        // Fetch in parallel
         const [availRes, userRes] = await Promise.all([
           fetch(`${API_BASE}/appointments/availability`, {
             credentials: "include",
@@ -67,10 +74,10 @@ export default function NewAppointmentPage() {
         }
 
         const availData = await availRes.json();
-        const userData = await userRes.json();
+        const userData: CurrentUser = await userRes.json();
 
         setAvailability(availData);
-        setHasAddress((userData.addresses?.length ?? 0) > 0);
+        setUser(userData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong");
       } finally {
@@ -79,6 +86,32 @@ export default function NewAppointmentPage() {
     };
     load();
   }, []);
+
+  const handleResend = async () => {
+    setResendMsg(null);
+    setResending(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/resend-verification`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Could not resend verification email");
+      }
+      setResendMsg({
+        type: "ok",
+        text: "Verification email sent — check your inbox.",
+      });
+    } catch (err) {
+      setResendMsg({
+        type: "err",
+        text: err instanceof Error ? err.message : "Something went wrong",
+      });
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleConfirm = async () => {
     if (!selectedDate || !selectedSlot) return;
@@ -113,35 +146,70 @@ export default function NewAppointmentPage() {
     }
   };
 
-  if (loading) return <div className="p-6">Loading…</div>;
-  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
+  if (loading) return <p className="text-muted">Loading…</p>;
+  if (error) return <Alert variant="danger">{error}</Alert>;
+  if (!user) return null;
 
-  // ⬇️ Address gate
+  const hasAddress = (user.addresses?.length ?? 0) > 0;
+
+  // Address gate
   if (!hasAddress) {
     return (
-      <div className="flex flex-col gap-4 max-w-2xl p-6">
+      <div className="flex flex-col gap-4 max-w-2xl">
         <h1 className="text-2xl font-bold">Book a visit</h1>
-        <div className="border border-dashed rounded p-6 flex flex-col gap-3">
-          <p>
-            You need to add an address before booking. The technician needs to
-            know where to go.
-          </p>
-          <Link
-            href="/account"
-            className="bg-black text-white rounded p-2 self-start"
-          >
-            Add address
-          </Link>
-        </div>
+        <Alert variant="warning" title="Address required">
+          You need to add an address before booking. The technician needs to
+          know where to go.
+          <div className="mt-2">
+            <Link
+              href="/account"
+              className="inline-flex items-center justify-center rounded font-bold px-4 py-2 bg-primary text-on-primary hover:opacity-90 transition-opacity"
+            >
+              Add address
+            </Link>
+          </div>
+        </Alert>
       </div>
     );
   }
 
   const dayData = availability.find((d) => d.date === selectedDate);
+  const isVerified = user.verified;
 
   return (
-    <div className="flex flex-col gap-8 max-w-2xl p-6">
+    <div className="flex flex-col gap-8 max-w-2xl">
       <h1 className="text-2xl font-bold">Book a visit</h1>
+
+      {!isVerified && (
+        <Alert variant="warning" title="Verify your email to book">
+          We sent a verification link to <strong>{user.email}</strong>. Check
+          your inbox before confirming a booking.
+          <div className="mt-2 flex flex-col gap-2">
+            <div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleResend}
+                disabled={resending}
+              >
+                {resending ? "Sending…" : "Resend verification email"}
+              </Button>
+            </div>
+            {resendMsg && (
+              <p
+                className={clsx(
+                  "text-sm",
+                  resendMsg.type === "ok"
+                    ? "text-success-text"
+                    : "text-danger-text",
+                )}
+              >
+                {resendMsg.text}
+              </p>
+            )}
+          </div>
+        </Alert>
+      )}
 
       {/* Step 1: Date strip */}
       <section>
@@ -218,10 +286,14 @@ export default function NewAppointmentPage() {
 
           <Button
             onClick={handleConfirm}
-            disabled={submitting}
+            disabled={submitting || !isVerified}
             className="mt-2"
           >
-            {submitting ? "Creating…" : "Confirm appointment"}
+            {submitting
+              ? "Creating…"
+              : isVerified
+                ? "Confirm appointment"
+                : "Verify email to confirm"}
           </Button>
         </section>
       )}
