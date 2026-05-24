@@ -5,6 +5,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
 import { statusVariant } from "@/src/lib/appointment-status";
+import { formatDay } from "@/src/lib/formatters";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -42,16 +43,6 @@ type AppointmentDetail = {
   notes: string | null;
   user: AppointmentUser;
 };
-
-function formatDay(isoDate: string): string {
-  const d = new Date(isoDate + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 const ALL_STATUSES: AppointmentStatus[] = [
   "SCHEDULED",
@@ -192,7 +183,7 @@ export default function AppointmentDetailPage() {
         <Card className="flex flex-col gap-1">
           <p>
             <span className="text-muted">Date: </span>
-            {formatDay(appointment.date)}
+            {formatDay(appointment.date, "long")}
           </p>
           <p>
             <span className="text-muted">Time slot: </span>

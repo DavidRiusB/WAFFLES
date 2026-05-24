@@ -9,6 +9,7 @@ import { Select } from "@/src/components/ui/select";
 import { Badge } from "@/src/components/ui/badge";
 import { Alert } from "@/src/components/ui/alert";
 import { statusVariant, AppointmentStatus } from "@/src/lib/appointment-status";
+import { formatDay, toIso, addDays } from "@/src/lib/formatters";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -45,29 +46,6 @@ const PRESETS = [
   { key: "thisMonth", label: "This month" },
   { key: "lastMonth", label: "Last month" },
 ];
-
-function formatDay(isoDate: string): string {
-  const d = new Date(isoDate + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function toIso(d: Date): string {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function addDays(base: Date, days: number): Date {
-  const d = new Date(base);
-  d.setDate(d.getDate() + days);
-  return d;
-}
 
 function presetRange(preset: string): { startDate: string; endDate: string } {
   const today = new Date();
@@ -172,7 +150,7 @@ export default function AdminAppointmentsPage() {
   const sortedDates = Object.keys(grouped).sort();
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl p-6">
+    <div className="flex flex-col gap-6 max-w-3xl">
       <h1 className="text-2xl font-bold">Appointments</h1>
 
       {/* Preset buttons */}
@@ -243,7 +221,7 @@ export default function AdminAppointmentsPage() {
 
       {/* Results */}
       {loading ? (
-        <p className="text-muted p-6">Loading…</p>
+        <p className="text-muted">Loading…</p>
       ) : error ? (
         <Alert variant="danger">{error}</Alert>
       ) : sortedDates.length === 0 ? (
@@ -256,7 +234,7 @@ export default function AdminAppointmentsPage() {
         <div className="flex flex-col gap-6">
           {sortedDates.map((date) => (
             <section key={date} className="flex flex-col gap-2">
-              <h2 className="text-sm text-muted">{formatDay(date)}</h2>
+              <h2 className="text-sm text-muted">{formatDay(date, "long")}</h2>
               <div className="flex flex-col gap-2">
                 {grouped[date].map((appt) => (
                   <Link

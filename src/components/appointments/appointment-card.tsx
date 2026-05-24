@@ -1,5 +1,5 @@
 import { StatusBadge } from "./status-badge";
-import { formatDate, formatSlot } from "@/src/lib/formatters";
+import { formatDay, formatSlot } from "@/src/lib/formatters";
 import type { Appointment } from "@/src/types/appointment";
 
 export function AppointmentCard({ appointment }: { appointment: Appointment }) {
@@ -11,7 +11,7 @@ export function AppointmentCard({ appointment }: { appointment: Appointment }) {
       <div className="flex justify-between items-start">
         <div>
           <p className="text-sm text-gray-500">Date</p>
-          <p className="font-semibold">{formatDate(date)}</p>
+          <p className="font-semibold">{formatDay(date)}</p>
         </div>
 
         <StatusBadge status={status} />
