@@ -154,7 +154,7 @@ export default function AppointmentDetailPage() {
         <h1 className="text-2xl font-bold">Appointment</h1>
         <button
           onClick={() => router.back()}
-          className="text-sm text-accent hover:underline"
+          className="text-sm text-sm hover:underline text-center underline hover:opacity-70 transition-opacity"
         >
           ← Back
         </button>

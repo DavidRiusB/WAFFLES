@@ -88,10 +88,7 @@ export default function VerifyEmailPage() {
               The link may have expired or already been used. Log in and request
               a new verification email.
             </p>
-            <Link
-              href="/login"
-              className="text-sm text-accent hover:underline mt-2"
-            >
+            <Link href="/login" className="text-sm hover:underline mt-2">
               Go to login
             </Link>
           </>

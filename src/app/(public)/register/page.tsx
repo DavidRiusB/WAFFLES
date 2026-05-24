@@ -8,7 +8,6 @@ import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { useUser } from "@/src/context/user-context";
 import { FormField } from "@/src/components/ui/form-field";
-import { Card } from "@/src/components/ui/card";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -17,7 +16,6 @@ export default function RegisterPage() {
   const { login } = useUser();
 
   const [form, setForm] = useState({
-    userName: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -37,7 +35,16 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
 
-    // Client-side validation
+    console.log("password:", JSON.stringify(form.password));
+    console.log("confirm: ", JSON.stringify(form.confirmPassword));
+    console.log(
+      "length p:",
+      form.password.length,
+      "c:",
+      form.confirmPassword.length,
+    );
+    console.log("match?:  ", form.password === form.confirmPassword);
+
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -76,14 +83,6 @@ export default function RegisterPage() {
       className="w-full max-w-md bg-white p-8 rounded-xl shadow-sm flex flex-col gap-5"
     >
       <h1 className="text-2xl font-bold">Create Account</h1>
-
-      <FormField label="Username">
-        <Input
-          value={form.userName}
-          onChange={(e) => handleChange("userName", e.target.value)}
-          disabled={submitting}
-        />
-      </FormField>
 
       <FormField label="First Name">
         <Input
