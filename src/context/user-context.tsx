@@ -1,6 +1,9 @@
 "use client";
 
+import { useRouter } from "next/router";
 import { createContext, useContext, useEffect, useState } from "react";
+
+const router = useRouter();
 
 type User = {
   id: number;
@@ -50,11 +53,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const login = (user: User) => setUser(user);
 
   const logout = async () => {
+    setUser(null);
+    router.push("/");
     await fetch(`${API_BASE}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
-    setUser(null);
   };
 
   return (

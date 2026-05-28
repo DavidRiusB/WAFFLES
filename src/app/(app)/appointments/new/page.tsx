@@ -3,6 +3,7 @@
 import { Alert } from "@/src/components/ui/alert";
 import { Button } from "@/src/components/ui/button";
 import { Textarea } from "@/src/components/ui/textarea";
+import { formatDay } from "@/src/lib/formatters";
 import clsx from "clsx";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,15 +22,6 @@ type CurrentUser = {
   verified: boolean;
   addresses?: { id: number; isPrimary: boolean }[];
 };
-
-function formatDay(isoDate: string): string {
-  const d = new Date(isoDate + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export default function NewAppointmentPage() {
   const [availability, setAvailability] = useState<AvailabilityDay[]>([]);
@@ -179,6 +171,13 @@ export default function NewAppointmentPage() {
   return (
     <div className="flex flex-col gap-8 max-w-2xl">
       <h1 className="text-2xl font-bold">Book a visit</h1>
+
+      <button
+        onClick={() => router.push("/appointments")}
+        className="text-sm text-accent hover:underline"
+      >
+        ← Back
+      </button>
 
       {!isVerified && (
         <Alert variant="warning" title="Verify your email to book">

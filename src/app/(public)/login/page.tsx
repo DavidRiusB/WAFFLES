@@ -45,7 +45,12 @@ export default function Page() {
 
       const data = await res.json();
       login(data);
-      router.push("/dashboard");
+
+      if (data.user?.role === "admin") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
