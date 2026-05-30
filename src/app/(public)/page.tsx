@@ -177,10 +177,7 @@ export default function LandingPage() {
             <PackageCard title="Home Wi-Fi & network setup" price="$140" />
             <PackageCard title="Virus & malware removal" price="$150" />
             <PackageCard title="Data transfer & migration" price="$100" />
-            <PackageCard
-              title="OS reinstall / system refresh"
-              price="$160"
-            />
+            <PackageCard title="OS reinstall / system refresh" price="$160" />
             <PackageCard title="Printer setup" price="$75" />
             <PackageCard
               title="Hardware upgrade install"
@@ -246,9 +243,7 @@ export default function LandingPage() {
       <section className="bg-gray-100">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="max-w-2xl mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold">
-              Why EgalisysTech
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-bold">Why EgalisysTech</h2>
             <p className="mt-3 text-gray-600">
               Built around the kind of service I&apos;d want at my own house.
             </p>
@@ -283,8 +278,9 @@ export default function LandingPage() {
           <div>
             <h2 className="text-2xl font-bold">Service area</h2>
             <p className="mt-1 text-gray-700 max-w-2xl">
-              Serving Tooele, Grantsville, Stockton, Erda, and Lakepoint.
-              Not sure if you&apos;re in range? Reach out and I&apos;ll let you know.
+              Serving Tooele, Grantsville, Stockton, Erda, and Lakepoint. Not
+              sure if you&apos;re in range? Reach out and I&apos;ll let you
+              know.
             </p>
           </div>
         </div>
@@ -306,7 +302,8 @@ export default function LandingPage() {
               >
                 support@egalisystech.com
               </a>
-              . Service is by appointment — once you book, I&apos;ll reach out to confirm your time.
+              . Service is by appointment — once you book, I&apos;ll reach out
+              to confirm your time.
             </p>
           </div>
         </div>
@@ -342,7 +339,6 @@ export default function LandingPage() {
           )}
         </div>
       </section>
-
     </div>
   );
 }
@@ -357,7 +353,7 @@ function ServiceCard({
   body: string;
 }) {
   return (
-    <div className="border border-gray-200 rounded-xl p-6 hover:border-black transition-colors">
+    <div className="border border-gray-200 rounded-xl p-6">
       <div className="inline-flex items-center justify-center bg-yellow-400 text-black p-3 rounded-lg mb-4">
         {icon}
       </div>
@@ -447,12 +443,10 @@ function PackageCard({
   subtitle?: string;
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 hover:border-black transition-colors">
+    <div className="bg-white border border-gray-200 rounded-xl p-5">
       <div className="text-sm font-medium text-gray-700">{title}</div>
       <div className="mt-2 text-2xl font-bold">{price}</div>
-      {subtitle && (
-        <div className="mt-1 text-xs text-gray-500">{subtitle}</div>
-      )}
+      {subtitle && <div className="mt-1 text-xs text-gray-500">{subtitle}</div>}
     </div>
   );
 }
