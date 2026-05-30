@@ -1,9 +1,7 @@
 "use client";
 
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
-
-const router = useRouter();
 
 type User = {
   id: number;
@@ -28,6 +26,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
