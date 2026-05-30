@@ -44,9 +44,7 @@ export default function Page() {
       }
 
       const data = await res.json();
-      console.log("login response:", data); // ← add this
-      console.log("role:", data.role);
-      console.log("role type:", typeof data.role);
+
       login(data);
 
       if (data.role === "admin") {
